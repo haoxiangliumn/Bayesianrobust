@@ -1,0 +1,238 @@
+---
+title: "Bayesian Robust Multivariate Linear Regression with Incomplete Desponse"
+author: "Haoxiang Li"
+date: "10/6/2022"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bayesian Robust Multivariate Linear Regression with Incomplete Desponse}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Model
+
+Consider the multivariate linear regression model
+$$ 
+  \mathbf{Y}_i = \mathbf{B}^T \mathbf{x}_i + \mathbf{\Sigma}^{1/2} \mathbf{\varepsilon}_i,\ i \in \{1,\dots,n\},  
+$$
+
+To allow for error distributions with heavy tails, and handle possible influential observations in linear regression with normal errors, assume that the distribution of each $\mathbf{\varepsilon}_i$ is described by a scale mixture of multivariate normal densities, which takes the form
+$$
+f_{\text{err}}(\mathbf{\epsilon}) = \int_{0}^{\infty} \frac{w^{d/2}}{(2\pi)^{d/2}} \exp \left(-\frac{w}{2} \mathbf{\epsilon}^{T} \mathbf{\epsilon} \right) P_{mix}( w) , \quad \mathbf{\epsilon} \in \mathbb{R}^d.  
+$$
+$P_{mix}(\cdot)$ is a probability measure function on $\mathbb{R}^+$ referred to as the mixing distribution. 
+Gaussian mixtures constitute a variety of error distributions, and are widely used for robust regression.
+For instance, when $P_{mix}(\cdot)$ corresponds to the $\text{Gamma}(v/2,v/2)$ distribution for some $v > 0$, the errors follow the multivariate $t$ distribution with $v$ degrees of freedom.
+
+In the incomplete response situation, the likelihood can be adjusted accordingly. 
+
+
+Consider a Bayesian setting.
+Assume that $(\mathbf{B},\mathbf{\Sigma})$ has the  following prior density:
+$$
+	p_{\scriptsize\mbox{prior}}(\mathbf{\beta}, \mathbf{\varsigma})  	\propto |\mathbf{\varsigma}|^{-(m+1)/2} \exp \left[-\frac{1}{2} \operatorname{tr} \left(\mathbf{\varsigma}^{-1} \mathbf{a} \right)\right], \quad \mathbf{\beta} \in \mathbb{R}^{p \times d}, \; \mathbf{\varsigma} \in S_+^{d \times d},
+$$
+where $m\in \mathbb{R}$, $\mathbf{a} \in S_+^{d \times d}$, and $S_+^{d \times d}$ is the convex cone of $d \times d$ (symmetric) positive semi-definite real matrices.  For instance, the independence Jeffrey's prior corresponds to $m=d$ and $\mathbf{a}=0$, and non-informative constant prior corresponds to $m=-1$ and $\mathbf{a}=0$.
+
+
+
+## Monotone
+
+A realized missing structure $\mathbf{k} = (k_{i,j})_{i=1}^n{}_{j=1}^d \in \{0,1\}^{n \times d}$, where $k_{i,j} = 1$ if the $(i,j)$ element of $\mathbf{y}$ is observed, is said to be monotone if the following conditions hold:
+
+
+1. If $k_{i,j} = 1$ for some $i \in \{1,\dots,n\}$ and $j \in \{1,\dots,d\}$, then $k_{i',j'} = 1$ whenever $i' \leq i$ and $j' \geq j$.
+	
+2. $k_{i,d} = 1$ for $i \in \{1,\dots,n\}$.
+
+Clearly, fully observed response is monotone.
+Note that in practice, there are cases where the observed missing structure is apparently not monotone, but 
+the observed missing structure can be re-arranged to become monotone by permuting the rows and columns of the response matrix. A monotone structure is as follows.
+
+![The observed response under a monotoen structure.](monotone.png){width=250px}
+
+In the R functions, $yobs$ is the response matrix we observed associated with missing structure $I$.  
+
+
+
+## The DA and DAI algorithms
+
+The posterior is almost always intractable in the sense that it is hard to calculate its features such as expectation and quantiles, forcing the use of MCMC samplers.
+[Liu, 1996](https://www.jstor.org/stable/2291740) proposed a data augmentation (DA) algorithm, or two-component Gibbs sampler, that can be used to sample from this distribution under monotone missing patterns.
+
+
+Given the current state $(\mathbf{B}(t), \mathbf{\Sigma}(t)) = (\mathbf{\beta},\mathbf{\varsigma})$, 
+
+the DA algorithm draws the next state $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$ using the following steps:
+
+\textbf{I step.} Draw $\mathbf{W}^* = (W_1^*,\dots,W_n^*)$ from the conditional distribution of $\mathbf{W}$ given $(\mathbf{B}, \mathbf{\Sigma}, \mathbf{Y}_{(\mathbf{k})}) = (\mathbf{\beta}, \mathbf{\varsigma}, \mathbf{y}_{(\mathbf{k})})$.
+	Call the observed value $\mathbf{w}$.
+	
+\textbf{P step.} Draw $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$ from the conditional distribution of $(\mathbf{B}, \mathbf{\Sigma})$ given $(\mathbf{W}, \mathbf{Y}_{(\mathbf{k})}) = (\mathbf{w}, \mathbf{y}_{(\mathbf{k})})$.
+
+To impute missing response values, one can add a post hoc I step 
+
+\textbf{Post hoc I step.} Draw $\mathbf{Z}(t+1)$ from 
+	the conditional distribution of $\mathbf{Y}_{(\mathbf{k}_0 - \mathbf{k})}$ given $(\mathbf{Y}_{(\mathbf{k})}, \mathbf{W}, \mathbf{B}, \mathbf{\Sigma}) = (\mathbf{y}_{(\mathbf{k})}, \mathbf{w}, \mathbf{\beta}^*,\mathbf{\varsigma}^*)$, where $(\mathbf{\beta}^*,\mathbf{\varsigma}^*)$ is the sampled value of $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$.
+
+Parameter $\textit{yfull}$ in sampling functions indicates whether  output the missing responses or not. 
+
+The $da$ implements the DA algorithm when the response we observed is monotone.
+
+When the missing data do not posses a monotone structure, some missing entries need to be imputed if one wishes to implement the DA algorithm. We call this data augmentation algorithm with an intermediate imputation step (DAI).
+
+
+
+Let $\textbf{k}'$ be a missing structure larger than $\textbf{k}$. $\textbf{k}'$ is larger than $\textbf{k}$ if for all nonzero elements in $\textbf{k}$, the corresponding elements in $\textbf{k}'$ are also nonzero.
+
+The DAI algorithm draws the next state $(\mathbf{B}(t+1),\mathbf{\Sigma}(t+1))$ using the following steps.
+
+\textbf{I1 step.} Draw $\mathbf{W}^* = (W_1^*,\dots,W_n^*)$ from the conditional distribution of $\mathbf{W}$ given $(\mathbf{B}, \mathbf{\Sigma}, \mathbf{Y}_{(\mathbf{k})}) = (\mathbf{\beta},\mathbf{\varsigma}, \mathbf{y}_{(\mathbf{k})})$. Call the sampled value $\mathbf{w}$.
+	
+\textbf{I2 step.} Draw $\mathbf{Y}_{(\mathbf{k}' - \mathbf{k})}^*$ from 
+	the conditional distribution of $\mathbf{Y}_{(\mathbf{k}' - \mathbf{k})}$ given $(\mathbf{Y}_{i,(\mathbf{k})}, \mathbf{W}, \mathbf{B}, \mathbf{\Sigma}) = (\mathbf{y}_{i,(\mathbf{k})}, \mathbf{w}, \mathbf{\beta}, \mathbf{\varsigma})$.
+	Call the  sampled value $\mathbf{z}$.
+	
+\textbf{P step.} Draw $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$ from the conditional distribution of $(\mathbf{B}, \mathbf{\Sigma})$ given $(\mathbf{W}, \mathbf{Y}_{(\mathbf{k})}, \mathbf{Y}_{(\mathbf{k}' - \mathbf{k})}) = (\mathbf{w}, \mathbf{y}_{(\mathbf{k})}, \mathbf{z})$.
+
+Use the notation in the R functions. $\textbf{k}'$ corresponds to $Ik$, and $\textbf{k}$ corresponds to $I$.
+
+The $dageneral$ implements the DAI algorithm, and impute the response to fully observed in the I2 step, when the response we observed is monotone.
+
+The $daif$ implements the DAI algorithm, and impute the response to fully observed in the I2 step. The response has no missing pattern restrictions.
+
+The $dai$ implements the DAI algorithm, and impute the response to $Ik$ in the I2 step. The response has no missing pattern restrictions.
+
+## Condition
+
+To make the algorithms well-defined, the following H1 and H2 conditions are necessary. There exists a monotone missing structure $\mathbf{k}'$ with $\mathbf{k}'<\mathbf{k}$, such that $\mathbf{y}'$ associated with $\mathbf{k}'$. H1 is intricate. See the $paper$ for the details. 
+A special case of H1 is to pick fully observed part $\mathbf{y}'$, and let $\mathbf{X}'$ be the corresponding observed features.
+ H1 can be simplified as:
+\begin{equation} \label{da-condition-0} 
+	r(\mathbf{y}': \mathbf{X}') = p + d, \quad n > p + 2d - m - 1. 
+\end{equation}
+
+For condition H2, to ensure that the conditional density is always proper, we assume throughout the following.
+\begin{equation}\label{hh}
+	\int_{0}^{\infty} w^{d/2} \, P_{mix}(dw) <\infty.
+\end{equation}
+
+
+## Implement
+
+```{r}
+set.seed(1)
+library(Bayesianrobust) # load our package
+
+library(GeneralizedHyperbolic)
+library(LaplacesDemon)
+library(matlib)
+library(MASS)
+library(matrixNormal)
+library(ggplot2)
+# generate data
+library(mvtnorm)
+n <- 50
+X <- cbind(1, as.matrix(rnorm(n, 0, 1)))
+beta <- matrix(c(0.8, 0.4, 0.5, 0.3), nrow=2, ncol=2)
+var <- matrix(c(1, 0.6, 0.6, 2), 2, 2)
+error <- matrix(0, nrow=n, ncol=2)
+w <- rgamma(n, shape=2, rate=2)
+for (i in 1:n) {
+  error[i, ] <- rmvnorm(1, rep(0, nrow(var)), var / w[i])
+}
+yobs <- X %*% beta + error
+data <- cbind(yobs, X[, 2])
+data_d <- cbind(X[, 2], yobs)
+colnames(data_d) <- c("x", "yr1", "yr2")
+
+# display data
+library(GGally)
+ggpairs(data.frame(data_d))
+# ggsave("scatter.png", width=150, height=100, dpi=700, units="mm")
+rm(data_d)
+```
+
+
+
+```{r}
+# Parameters
+d <- ncol(yobs)
+m <- d # prior parameter
+A <- matrix(0, nrow=d, ncol=d) # matrix in the prior
+
+iter <- 1000
+lower <- 1 # burn-in
+upper <- iter + 1
+dim <- 2 # beta_21 
+```
+
+
+
+```{r}
+# Bayesian robust multivariate linear regression DA algorithm
+## There is no missing value. In this situation, the mda_gibbs and dami_gibbs coincide.
+## cw_gamma default is gamma(2, 2)
+resdag <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter) # da monotone
+resdaig <- dageneral(X, yobs, m, A, cw=cw_gamma, Ik=matrix(TRUE, nrow=nrow(yobs), ncol=ncol(yobs)),  iter=iter) # daimf fully observed
+
+# plot histogram
+sim <- data.frame(Model=rep(c("dag", "daimfg"), each=(upper - lower + 1)), beta=c(resdag$samples[lower:upper, dim], resdaig$samples[lower:upper, dim]))
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```
+
+
+```{r}
+# create monotone missing data
+for (i in c(47:50)) {
+  yobs[i, 1] <- NA
+}
+
+# implement
+resdag <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter) # da monotone
+resdaig <- dageneral(X, yobs, m, A, cw=cw_gamma,
+Ik=matrix(TRUE, nrow=nrow(yobs), ncol=ncol(yobs)),  iter=iter) # daimf monotone and impute to fully observed
+
+# plot histogram
+sim <- data.frame(Model=rep(c("dag", "daig"), each=(upper - lower + 1)), beta=c(resdag$samples[lower:upper, dim], resdaig$samples[lower:upper, dim]))
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```
+
+```{r}
+# impute missing response values
+resdagy <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter, yfull=TRUE)
+resdaigy <- dageneral(X, yobs, m, A, cw=cw_gamma,
+Ik=matrix(TRUE, nrow=nrow(yobs), ncol=ncol(yobs)),  iter=iter, yfull=TRUE) # daimf# da
+id <- ncol(resdagy$samples)
+# plot histogram
+sim <- data.frame(Model=rep(c("dag", "daimfg"), each=(upper - lower + 1)), beta=c(resdagy$samples[lower:upper, id], resdaigy$samples[lower:upper, id]))
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("yimputed") + ylab("Density")
+```
+
+
+
+```{r}
+# create non-monotone missing data
+for (i in c(47:50)) {
+  yobs[i, 1] <- NA
+}
+
+yobs[45, 2] <- NA
+Ik <- !is.na(yobs)
+Ik[45, 2] <- TRUE
+
+# implement
+resdaig <- dageneral(X, yobs, m, A, cw=cw_gamma, Ik=Ik, iter=iter) # dai
+resdaifg <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter) # daif
+
+# plot histogram
+sim <- data.frame(Model=rep(c("daig", "daifg"), each=(upper - lower + 1)), beta=c(resdag$samples[lower:upper, dim], resdaig$samples[lower:upper, dim]))
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```

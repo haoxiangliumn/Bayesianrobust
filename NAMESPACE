@@ -1,0 +1,13 @@
+export(dageneral)
+export(daimf)
+export(da)
+export(daif)
+export(dai)
+export(cw_gig, cw_gamma, cw_constant, cw_mass, cw_gig0, cw_gamma0, cw_mass0)
+
+importFrom("stats", "rchisq", "rgamma", "rnorm", "runif")
+importFrom("matlib", "inv")
+importFrom("MASS", "mvrnorm")
+importFrom("GeneralizedHyperbolic", "rgig")
+importFrom("LaplacesDemon", "rinvwishart")
+importFrom("matrixNormal", "rmatnorm")
