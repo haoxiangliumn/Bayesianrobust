@@ -1,4 +1,4 @@
-# monotone data augmentation gibbs DA
+# monotone data augmentation gibbs DA each iteration
 da <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, iter=100, yfull=FALSE)
 {
   # DA each iteration (yobs has to be monotone).
