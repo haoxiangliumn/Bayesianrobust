@@ -1,7 +1,7 @@
-# monotone data augmentation gibbs DA each iteration
+# monotone data augmentation gibbs DA 
 da <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, iter=100, yfull=FALSE)
 {
-  # DA each iteration (yobs has to be monotone).
+  # DA (yobs has to be monotone).
   # Args:
   #   X: matrix. Feature matrix.
   #   yobs: Monotone Matrix (need to reshape into monotone structure). Y observed matrix with Y_obs and the missing values NA.
@@ -15,8 +15,7 @@ da <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, iter=1
   #   List. First iter+1 elements: Matrix sigma and Matrix beta t=0 to t=iter; iter+2 element: time to implement the algorithm.
   #         beta: linear regression parameters
   #         sigma: covariance matrix  
-  #
-  # TODO: add I1/I2 y imputation to monotone step for non-monotone responses.
+
   
   I <- ! is.na(yobs) # missing index : observed TRUE  missing FALSE
   ni <- colSums(I, na.rm = T) # \sum_{i=1}^l n_i
@@ -57,4 +56,4 @@ da <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, iter=1
   return(result)
 }
 
-#result_mda = mda_gibbs(X, yobs, m, A, cw=cw_gamma, iter=iter)
+

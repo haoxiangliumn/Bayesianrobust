@@ -1,8 +1,8 @@
-# Gibbs sampler implementing DAI algorithms (fully observed/monotone)
+# Gibbs sampler implementing DAI algorithms (any missing structure to fully observed/monotone)
 # DAI (DAI) (impute y_{(I)} to y_{(Ik)} if y has missing values)
 dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=matrix(TRUE, nrow=nrow(yobs), ncol=ncol(yobs)), iter=100, yfull=FALSE)
 {
-  # MDAI (impute y_{(I)} to y_{(Ik)})
+  # DAI (impute y_{(I)} to y_{(Ik)}) (any missing structure to fully observed/monotone)
   # Args:
   #   X: matrix. Feature matrix.
   #   yobs: Matrix. Y observed matrix with Y_obs and the missing values NA.
@@ -17,8 +17,6 @@ dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=ma
   #   List. First iter+1 elements: Matrix sigma and Matrix beta t=0 to t=iter; iter+2 element: time to implement the algorithm.
   #         beta: linear regression parameters
   #         sigma: covariance matrix
-  #
-  # TODO: add I1/I2 y imputation to monotone step for non-monotone responses.
 
   I <- ! is.na(yobs) # missing index : observed TRUE  missing FALSE
   ni <- colSums(Ik, na.rm = T) # \sum_{i=1}^l n_i
@@ -72,4 +70,3 @@ dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=ma
   return(result)
 }
 
-#result_mda = mda_gibbs(X, yobs, m, A, cw=cw_gamma, iter=iter)

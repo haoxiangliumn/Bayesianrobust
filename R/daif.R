@@ -1,7 +1,7 @@
-# DAI (impute y_{(\bm{k})} to fully observed if y has missing values)
+# DAI (impute y_{(\bm{k})} any missing structure to fully observed if y has missing values)
 daif <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, iter=100, yfull=FALSE)
 {
-  # DAI (impute y_{(\bm{k})} to fully observed if y has missing values)
+  # DAI (impute y_{(\bm{k})} any missing structure to fully observed if y has missing values)
   # Args:
   #   X: matrix. Feature matrix.
   #   yobs: Matrix (with missing as NA). Y observed matrix with Y_obs and the missing values NA.
