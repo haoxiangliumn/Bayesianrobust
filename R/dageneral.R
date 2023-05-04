@@ -16,8 +16,6 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
   #   List. First iter+1 elements: Matrix sigma and Matrix beta t=0 to t=iter; iter+2 element: time to implement the algorithm.
   #         beta: linear regression parameters
   #         sigma: covariance matrix
-  #
-  # TODO: Find smallest (k)'> k and largest (k)''<k.
   
   # A: positive semidefinite
   if( ! isSymmetric(A)){
