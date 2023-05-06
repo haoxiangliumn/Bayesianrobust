@@ -24,9 +24,17 @@ Returns a list.
 
 
 \examples{
+# 1 not monotone
 a = c(NA, 1,4,NA,5,9)
-B = c(2, NA, 3,5,6,NA)
+b = c(2, NA, 3,5,6,NA)
 c = c(2,4,6,NA, 5,6)
-data = data.frame(a,B,c)
+data = data.frame(a,b,c)
+ismonotone(data)
+
+# 2 monotone
+a = c(4, 1,4,NA,5,9)
+b = c(2, NA, 3,NA,6,NA)
+c = c(2,4,6,NA, 5,6)
+data = data.frame(a,b,c)
 ismonotone(data)
 }

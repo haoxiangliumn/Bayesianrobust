@@ -1,6 +1,6 @@
 \name{DA_general}
 \alias{dageneral}
-\title{General data augmentation sampler}
+\title{Data augmentation samplers}
 \description{
 Data augmentation algorithms for Bayesian robust multivariate linear regression with incomplete response.
 }
