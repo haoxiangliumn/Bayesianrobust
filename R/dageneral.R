@@ -24,7 +24,10 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
   if(min(eigen(A, symmetric=TRUE)$values) < 0){
     stop("A should be Positive semidefinite")
   } 
-  
+  if(dim(t(yobs))[1] == 1) # vector
+  {
+    yobs <- as.matrix(yobs) 
+  }
   if( ! missing(Ik)) {
     if( ! is.logical(Ik)){
       stop("Ik elements should be TRUE/FALSE logical values")
@@ -32,10 +35,38 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
   }
   I <- ! is.na(yobs) # missing index : observed TRUE  missing FALSE
   ni <- colSums(I, na.rm=T) # \sum_{i=1}^l n_i
-  monotone <- 1 
-  if ( ! all(ni == cummax(ni))) {
-    monotone <- 0
-  } 
+  monotone <- TRUE
+  if (ni[1] == 0){
+    error("An observation should contain at least one observed entry")
+  }
+  # check NA monotone
+  if ( all(ni == cummax(ni))) {
+    for (i in 1:length(ni)){
+      if (sum(I[c(1:ni[i]), i]) != ni[i]){
+        monotone <- FALSE
+        break
+      }
+    } 
+  }
+  else{
+    monotone <- FALSE
+  }
+  if(!missing(Ik)){
+    nik <- colSums(I, na.rm=T)
+    # check NA monotone
+    if ( all(nik == cummax(nik))) {
+      for (i in 1:length(nik)){
+        if (sum(I[c(1:nik[i]), i]) != nik[i]){
+          error("Ik should be monotone")
+        }
+      } 
+    }
+    else{
+      error("Ik should be monotone")
+    }
+  }
+  
+  
   d <- ncol(I)
   n <- nrow(I)
   p <- ncol(X)

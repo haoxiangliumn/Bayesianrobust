@@ -16,24 +16,30 @@ daimf <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, ite
   #         beta: linear regression parameters
   #         sigma: covariance matrix  
   
-  # initial value OLS     
+  
+  if(dim(t(yobs))[1] == 1) # vector
+  {
+    yobs <- as.matrix(yobs) 
+  }
   I <- ! is.na(yobs) # missing index : observed TRUE  missing FALSE
-  ni <- colSums(I, na.rm=T) # \sum_{i=1}^l n_i
-  if ( ! all(ni == cummax(ni))) {
-    stop("yobs is not monotone")
-  } 
+  ni <- colSums(I, na.rm = T) # \sum_{i=1}^l n_i
+  if (ni[1] == 0){
+    error("An observation should contain at least one observed entry")
+  }
+  # check NA monotone
+  if ( all(ni == cummax(ni))) {
+    for (i in 1:length(ni)){
+      if (sum(I[c(1:ni[i]), i]) != ni[i]){
+        stop("yobs is not monotone")
+      }
+    } 
+  }
   
   d <- ncol(I)
   n <- nrow(I)
   p <- ncol(X)
   
-  for (i in 1:d) {
-    if (sum(I[c(1:ni[i]), i]) != ni[i]) {
-      stop("yobs is not monotone")
-      break
-    } 
-  }
-  
+  # initial value OLS 
   if(yfull) samples <- matrix(0, nrow=iter + 1, ncol=p * d + d * d + sum(!I))
   else samples <- matrix(0, nrow=iter + 1, ncol=p * d + d * d)
   # initial (use OLS from the pattern 1 data)
