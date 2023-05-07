@@ -22,17 +22,19 @@ cw_mass0(di, ri, gamma=0.6, lambda=0.8)
 }
 \arguments{
   \item{di}{integer. The number of components observed in the response Y_i}
-  \item{ri}{non-negative real number. r_{i,({k})} in the paper}
-  \item{...}{parameters in the mixing distribution. See details.}
-  \item{a, b, p, gamma, lambda}{parameters in the mixing distribution. See details.}
+  \item{ri}{non-negative real number.}
+  \item{...}{parameters in the mixing distribution.}
+  \item{a, b, p, gamma, lambda}{parameters in the mixing distribution.}
 }
 \details{
+Function 
 \code{cw(di,ri,...)} draws samples from the conditional mixing distribution, where
 \deqn{P(w) \propto w^{\code{di}/2}\exp(-\code{ri}*w/2)P_{mix}(dw)}
 
-\eqn{P_{mix}(dw)} is the mixing distribution for robust regression. A well-known example is that when \eqn{P_{mix}} follows gamma(v/2, v/2), the errors follow multivariate \eqn{t(v)} distribution.
-
-\code{...} Parameters in the mixing distribution. 
+\eqn{P_{mix}(dw)} is the mixing distribution for robust regression. A well-known example is that when \eqn{P_{mix}} follows \eqn{gamma(v/2, v/2)}, the errors follow multivariate \eqn{t(v)} distribution.
+See \url{http://arxiv.org/abs/2212.01712} for more details.
+%\code{...} Parameters in the mixing distribution. 
+ 
 
 \code{cw_gamma0(di, ri, a=2, b=2)} \code{a, b} are the parameters in the mixing diostribution with \code{rgamma(n = 1, shape = a, rate = b)}
 
@@ -40,8 +42,8 @@ cw_mass0(di, ri, gamma=0.6, lambda=0.8)
 
 \code{cw_mass0(di, ri, gamma=0.6, lambda=0.8)} \code{gamma, lambda} are the parameters in the mixing distribution, and the distribution \eqn{P_{mix}} follows \code{w=lambda} with probability gamma; \code{w = 1} with probability \code{1-gamma}.
 
-To effectively implement the algorithms, the mixing distribution \eqn{P_{mix}(dw)} should satisfy
-\deqn{\int_{0}^\infty w^{d/2}P_{mix}(dw) <\infty,} where d is the number of response components.
+%To effectively implement the algorithms, the mixing distribution \eqn{P_{mix}(dw)} should satisfy
+%\deqn{\int_{0}^\infty w^{d/2}P_{mix}(dw) <\infty,} where d is the number of response components.
 }
 \value{
 Positive real number. Sample weight from the conditional weight distribution. 
