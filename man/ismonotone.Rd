@@ -14,7 +14,7 @@ ismonotone(yobs)
 Returns a list.
 \item{monotone}{logic. \code{TRUE} if yobs is monotone, and \code{FALSE} otherwise.}
 
-\item{ynew}{ matrix. New \code{yobs} in the standard monotone format or clothest to the monotone format.}
+\item{ynew}{ matrix. New \code{yobs} in the standard monotone format or closest to the monotone format.}
 
 \item{ynew_column}{vector. \code{ynew} (permuted) original column location in \code{yobs}.}
 

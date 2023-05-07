@@ -27,7 +27,7 @@ dai(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull=FALSE
 }
 \value{
 Returns a list with two elements.
-\item{samples}{ matrix. MCMC samples with \code{iter+1} rows and \code{p*d+d*d} columns. Each row is one iteration of the Markov chain (from time 0 to time \code{iter}). The sampled matrices are vectorized by stacking the columns. The \code{1}st to \code{p*d}th columns are the sampled \eqn{\beta} coefficients, and the \code{p*d+1}th to \code{p*d+d*d}th coulmns are the sampled \eqn{\Sigma} coeffficients. If \code{yfull} is \code{TRUE}, the rest of elements in each row are imputed missing components of \code{yobs}.}
+\item{samples}{ matrix. MCMC samples with \code{iter+1} rows and \code{p*d+d*d} columns. Each row is one iteration of the Markov chain (from time 0 to time \code{iter}). The sampled matrices are vectorized by stacking the columns. The \code{1}st to \code{p*d}th columns are the sampled \eqn{\beta} coefficients, and the \code{p*d+1}th to \code{p*d+d*d}th columns are the sampled \eqn{\Sigma} coefficients. If \code{yfull} is \code{TRUE}, the rest of the elements in each row are imputed missing components of \code{yobs}.}
 
 \item{time}{ positive real number. Time to sample \code{iter} number of samples.}
 
@@ -35,11 +35,11 @@ Returns a list with two elements.
 \details{
 Use function \code{\link{dageneral}} to implement these algorithms. It will automatically find the best fit to sample from the posterior.
  
-Function \code{da} implements the DA algorithm, and requires \code{yobs} to be monotone.
+Function \code{da} implements the DA algorithm and requires \code{yobs} to be monotone.
  
-Function \code{daimf} implements the DAI algorithm, requires \code{yobs} to be monotone, and imputes to fully observed in the DAI I step.
+Function \code{daimf} implements the DAI algorithm, requires \code{yobs} to be monotone and imputes data to be fully observed in the DAI I step.
   
-Function \code{daif} implements the DAI algorithm, and imputes to fully observed in the DAI I step.
+Function \code{daif} implements the DAI algorithm and imputes data to be fully observed in the DAI I step.
 
 Function \code{daif} implements the DAI algorithm.
 }

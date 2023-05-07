@@ -20,7 +20,7 @@ dageneral(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull
 }
 \value{
 Returns a list with two elements.
-\item{samples}{ matrix. MCMC samples with \code{iter+1} rows and \code{p*d+d*d} columns. Each row is one iteration of the Markov chain (from time 0 to time \code{iter}). The sampled matrices are vectorized by stacking the columns. The \code{1}st to \code{p*d}th columns are the sampled \eqn{\beta} coefficients, and the \code{p*d+1}th to \code{p*d+d*d}th coulmns are the sampled \eqn{\Sigma} coeffficients. If \code{yfull} is \code{TRUE}, the rest of elements in each row are imputed missing components of \code{yobs}.}
+\item{samples}{ matrix. MCMC samples with \code{iter+1} rows and \code{p*d+d*d} columns. Each row is one iteration of the Markov chain (from time 0 to time \code{iter}). The sampled matrices are vectorized by stacking the columns. The \code{1}st to \code{p*d}th columns are the sampled \eqn{\beta} coefficients, and the \code{p*d+1}th to \code{p*d+d*d}th columns are the sampled \eqn{\Sigma} coefficients. If \code{yfull} is \code{TRUE}, the rest of the elements in each row are imputed missing components of \code{yobs}.}
 
 \item{time}{ positive real number. Time to sample \code{iter} number of samples.}
 
@@ -41,12 +41,12 @@ The \code{cw} function generates samples from the conditional weight distributio
 {Prior:} We assume the following commonly used groups of priors: \deqn{\text{prior}(\beta,\Sigma)\propto |\Sigma|^{-(m+1)/2} \exp(-0.5 \text{tr}(\Sigma^{-1} A))}
 The default values of \eqn{m} and \eqn{\Sigma} are the independence Jeffrey's prior.
 
-{Monotone:} See the paper for monotone missing structure definition and standard format. See \code{\link{monotone}} function for monotone checking and permutation into standard format. 
+{Monotone:} See the paper for monotone missing structure definition and standard format. See \code{\link{monotone}} function for monotone checking and permutation into the standard format. 
 
 \code{Ik}: If \code{yobs} is monotone, then by default, there is no imputation in the DA I step. 
 The missing structure \code{Ik} represents the missing structure after mandatory imputation in the DAI I step. 
 If \code{yobs} is not monotone, the default \code{Ik} is fully observed, i.e.,  all elements in \code{Ik} are \code{TRUE}. 
-Clearly, elements observed in \code{yobs} should also be non-missing under \code{Ik}.
+Elements observed in \code{yobs} should also be non-missing under \code{Ik}.
 
 %Let \code{I} be the missing structure of \code{yobs}, i.e., \code{I_{ij}=1} if \code{yobs_{ij}} is not \code{NA}, and  
 %\code{I_{ij}=0} if \code{yobs_{ij}} is \code{NA}. Let \code{Ik} be another missing structure. \code{Ik} is larger than \code{I} if for all nonzero elements in \code{I}, the corresponding elements in \code{Ik} are also nonzero.
