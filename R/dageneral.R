@@ -52,11 +52,11 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
     monotone <- FALSE
   }
   if(!missing(Ik)){
-    nik <- colSums(I, na.rm=T)
+    nik <- colSums(Ik, na.rm=T)
     # check NA monotone
     if ( all(nik == cummax(nik))) {
       for (i in 1:length(nik)){
-        if (sum(I[c(1:nik[i]), i]) != nik[i]){
+        if (sum(Ik[c(1:nik[i]), i]) != nik[i]){
           stop("Ik should be monotone")
         }
       } 
