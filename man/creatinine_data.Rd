@@ -1,4 +1,5 @@
 \name{creatinine_data}
+\alias{creatinine_data}
 \title{Creatinine data}
 \description{
 The data for the creatinine clearance from Shih and Weisberg (1986).   
