@@ -1,5 +1,5 @@
 ---
-title: "Bayesian Robust Multivariate Linear Regression with Incomplete Desponse"
+title: "Bayesian Robust Multivariate Linear Regression with Incomplete Response"
 author: "Haoxiang Li"
 date: "10/6/2022"
 output: rmarkdown::html_vignette
@@ -17,6 +17,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 This vignette is an introduction of Bayesian robust multivariate linear regression (with possible incomplete data), and the data augmentation algorithms to sample from the posterior. See our [paper](http://arxiv.org/abs/2212.01712) for technical details.
+
+```{r}
+set.seed(1)
+library(Bayesianrobust) # load our package
+```
 
 # Introduction
 
@@ -91,6 +96,7 @@ We also develop conditions to guarantee a proper posterior. See the [paper](http
 
 # R Implementation
 
+
 ## Illustrative Example
 
 The creatinine clearance data is introduced by Shih and Weisberg (1986), and is used in an illustrative example by Liu (1996).
@@ -99,15 +105,13 @@ The data are from a clinical trial on 34 male patients with body weight (WT) in 
 InSC = In(SC), InWT = In(WT), InCR = In(CR), In140_AGE = In(140-AGE).
 Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable. 
 There is one influential observation patient 27.
-We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictor (1 represents the intercept).
+We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictors (1 represents the intercept).
 
-### Step 1 Missing structure
+### Missing structure
 
 Check whether the response is monotone or not after permuting the rows and columns.
 
 ```{r}
-set.seed(1)
-library(Bayesianrobust) # load our package
 mon <- ismonotone(creatinine_data[c("InSC", "InWT", "InCR")])
 ```
 
@@ -118,7 +122,7 @@ mon$monotone
 ```
 Response data (after rearranging the rows and columns).
 
-When the missing structure is monotone. Use the rearranged data for later analysis, since the data is required be in the standard monotone format. 
+When the missing structure is monotone. Use the rearranged data for later analysis, since the data is required to be in the standard monotone format. 
 
 When the missing structure is not monotone. It is suggested to use the rearranged data. The results are the same, and the permuted version displays the missing structure better.
 
@@ -138,7 +142,7 @@ mon$ynew_row
 
 ### Implement the data augmentation algorithms
 
-Suppose we want independence Jeffrey's prior with mixing distribution Gamma(2,2). 
+Suppose we want the independence Jeffrey's prior with mixing distribution Gamma(2,2). 
 
 ```{r}
 iter = 5000
@@ -151,7 +155,7 @@ The algorithm generates a Markov chain with length `r iter`. And the computation
 
 
 
-### Assess the MCMC samples and perform analysis
+### Assess the MCMC samples
 
 \code{samples}
  stores \code{iter+1} MCMC samples. The sampled matrices are vectorized by stacking the columns. 
@@ -159,6 +163,7 @@ The algorithm generates a Markov chain with length `r iter`. And the computation
 
 
 ```{r}
+library(ggplot2)
 lower <- 10 # burn-in
 upper <- iter + 1
 dim <- 2 # beta(2,1) 
@@ -212,13 +217,13 @@ sim <- data.frame(Model=rep(c("gamma2", "p", "gamma4", "rp"), each=(upper - lowe
 ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
 ```
 
-Because of the influential observation patient 27, the "p" line which represents the normal error model, is quite different from the other lines. The "gamma2" line, which represents $t(4)$ error, and "gamma4" line, which represents $t(8)$, behave similarly.  With patient 27 removed, the "rp" line, which uses the normal error model without patient 27, agrees with the "gamma2" and "gamma4" lines, but of the "rp" line is smaller than the "gamma2" and "gamma4" lines. This implies that removing patient 27 may underestimate  uncertainties.
+Because of the influential observation patient 27, the "p" line which represents the normal error model, is quite different from the other lines. The "gamma2" line, which represents $t(4)$ error, and "gamma4" line, which represents $t(8)$, behave similarly.  With patient 27 removed, the "rp" line, which uses the normal error model without patient 27, agrees with the "gamma2" and "gamma4" lines, but the tail of the "rp" line is smaller than the "gamma2" and "gamma4" lines. This implies that removing patient 27 may underestimate uncertainties.
 
 
 
-## Monotone example
+## Monotone Example
 
-We show an monotone missing structure situation by removing the  InSC values of observation 29 and 30.
+We show a monotone missing structure situation by removing the  InSC values of observations 29 and 30.
 
 ```{r}
 yobsm <- creatinine_data[c("InSC", "InWT", "InCR")]
@@ -248,7 +253,7 @@ monm$ynew_row
 ```
 We should switch rows 29, 30 and 33, 34 to get the standard monotone format.
 
-The function calls the DA algorith, which is the most efficient one in this situation. 
+The function calls the DA algorithm, which is the most efficient one in this situation. 
 
 ```{r}
 mcmcm <- dageneral(X, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
@@ -256,23 +261,22 @@ mcmcm <- dageneral(X, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, i
 
 The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
 
-##  Data Augmenatation Algorithms Comparison
+##  Data Augmentation Algorithms Comparison
 
 
-When the missing structure is monotone, both the DA and DAI algorithms can be efficiently implemented. We showed that the DAI algorithm will never be faster than the corresponding DA version. We did an numerical experiment, calculating the effective sample sizes and effective sample sizes per minute. The DA algorithm is considerably more efficient even after considering the computation complexity. See our [paper](http://arxiv.org/abs/2212.01712) Section 4.4 and Section 5 for more details.
+When the missing structure is monotone, both the DA and DAI algorithms can be efficiently implemented. We showed that the DAI algorithm will never be faster than the corresponding DA version. We did a numerical experiment, calculating the effective sample sizes and effective sample sizes per minute. The DA algorithm is considerably more efficient even after considering the computation complexity. See our [paper](http://arxiv.org/abs/2212.01712) Section 4.4 and Section 5 for more details.
 
 
 ## Efficient Problem Size
 
-In the example above, we have $d=3$ response, $p=2$ predictors and $n=34$ observations. The model can be implemented at a reasonable computation time at $d=20$, $p=5$ and $n=500$. The storage cost is also a burden if the question is too large. 
-
+In the example above, we have $d=3$ response, $p=2$ predictors, and $n=34$ observations. The model can be implemented at a reasonable computation time at $d=20$, $p=100$, and $n=500$. The storage cost is also a burden if the question is too large. 
 
 
 # Appendix
 
-## Data Augmenatation Algorithms in Different Situations
+## Data Augmentation Algorithms in Different Situations
 
-We use an artificial data to implement data augmentation algorithms in different situations.
+We use artificial data to implement data augmentation algorithms in different situations.
 
 ```{r}
 set.seed(1)
@@ -281,7 +285,7 @@ library(LaplacesDemon)
 library(matlib)
 library(MASS)
 library(matrixNormal)
-library(ggplot2)
+
 # generate data
 library(mvtnorm)
 n <- 50
@@ -314,7 +318,7 @@ m <- d # prior parameter
 A <- matrix(0, nrow=d, ncol=d) # matrix in the prior
 
 iter <- 1000
-lower <- 1 # burn-in
+lower <- 10 # burn-in
 upper <- iter + 1
 dim <- 2 # beta_21 
 ```

@@ -24,7 +24,7 @@ daimf <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, ite
   I <- ! is.na(yobs) # missing index : observed TRUE  missing FALSE
   ni <- colSums(I, na.rm = T) # \sum_{i=1}^l n_i
   if (ni[1] == 0){
-    error("An observation should contain at least one observed entry")
+    stop("An observation should contain at least one observed entry")
   }
   # check NA monotone
   if ( all(ni == cummax(ni))) {

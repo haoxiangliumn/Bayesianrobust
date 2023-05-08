@@ -37,7 +37,7 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
   ni <- colSums(I, na.rm=T) # \sum_{i=1}^l n_i
   monotone <- TRUE
   if (ni[1] == 0){
-    error("An observation should contain at least one observed entry")
+    stop("An observation should contain at least one observed entry")
   }
   # check NA monotone
   if ( all(ni == cummax(ni))) {
@@ -57,12 +57,12 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
     if ( all(nik == cummax(nik))) {
       for (i in 1:length(nik)){
         if (sum(I[c(1:nik[i]), i]) != nik[i]){
-          error("Ik should be monotone")
+          stop("Ik should be monotone")
         }
       } 
     }
     else{
-      error("Ik should be monotone")
+      stop("Ik should be monotone")
     }
   }
   

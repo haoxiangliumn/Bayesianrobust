@@ -22,7 +22,7 @@ ismonotone <- function(yobs)
   ni <- colSums(I_new, na.rm = T)
   monotone <- TRUE
   if (ni[1] == 0){
-    error("An observation should contain at least one observed entry")
+    stop("An observation should contain at least one observed entry")
   }
   # check NA monotone
   if ( all(ni == cummax(ni))) {
