@@ -95,20 +95,23 @@ We also develop conditions to guarantee a proper posterior. See the [paper](http
 
 The creatinine clearance data is introduced by Shih and Weisberg (1986), and is used in an illustrative example by Liu (1996).
 
-The data are from a clinical trial on 34 male patients with body weight (WT) in kg, serum creatinine (SC) concentration in mg/deciliter, age (AGE) in years, and endogenous creatinine (CR) clearance. Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable.
+The data are from a clinical trial on 34 male patients with body weight (WT) in kg, serum creatinine (SC) concentration in mg/deciliter, age (AGE) in years, and endogenous creatinine (CR) clearance. 
+InSC = In(SC), InWT = In(WT), InCR = In(CR), In140_AGE = In(140-AGE).
+Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable. 
 There is one influential observation patient 27.
-
+We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictor (1 represents the intercept).
 
 ### Step 1 Missing structure
 
-Check whether the data is monotone or not after permuting the rows and columns.
+Check whether the response is monotone or not after permuting the rows and columns.
 
 ```{r}
 set.seed(1)
 library(Bayesianrobust) # load our package
-mon <- ismonotone(creatinine_data)
+mon <- ismonotone(creatinine_data[c("InSC", "InWT", "InCR")])
 ```
-The data is not monotone
+
+The response is not monotone:
 
 ```{r}
 mon$monotone
@@ -121,7 +124,7 @@ When the missing structure is not monotone. It is suggested to use the rearrange
 
 
 ```{r}
-data <- mon$ynew
+yobs <- mon$ynew
 ```
 
 Shows the locations of the rows and columns in the original data.
@@ -135,19 +138,142 @@ mon$ynew_row
 
 ### Implement the data augmentation algorithms
 
+Suppose we want independence Jeffrey's prior with mixing distribution Gamma(2,2). 
+
+```{r}
+iter = 5000
+X = cbind(1, creatinine_data["In140_AGE"])
+mcmc <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
+```
+
+The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
+
+
+
+
+### Assess the MCMC samples and perform analysis
+
+\code{samples}
+ stores \code{iter+1} MCMC samples. The sampled matrices are vectorized by stacking the columns. 
+ For the ith sample, \eqn{\beta(i)} is \code{as.matrix(samples[i+1, 1:p\*d], nrow=p, ncol=d)}, and \eqn{\Sigma(i)} is \code{as.matrix(samples[i+1, (p\*d+1):p\*d+d^2], nrow=d, ncol=d)}. If \code{yfull} is \code{TRUE}, the rest of the elements in each row are imputed missing components of \code{yobs}.
 
 
 ```{r}
+lower <- 10 # burn-in
+upper <- iter + 1
+dim <- 2 # beta(2,1) 
+sim <- data.frame(Model=rep(c("gamma"), each=(upper - lower + 1)), beta= mcmc$samples[lower:upper, dim])
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```
 
+We try more mixing distribution choices.
+
+Constant. This corresponds to the normal error.
+
+```{r}
+# constant
+mcmc_c <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
+```
+### (Functions to sample from the conditional weight distributions)
+
+Function 
+\code{cw(di,ri,...)} draws samples from the conditional mixing distribution, where
+$$ P(w) \propto w^{{di}/2}\exp(-{ri}w/2)P_{mix}(dw).$$
+
+```{r}
+# gamma(a=4, b=4)
+cw_gamma4 <- function(di, ri) {
+  return(cw_gamma0(d=di, ri=ri, a=4, b=4))
+}
+# where
+#cw_gamma0 <- function(di, ri, a=2, b=2) {
+#  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))
+#}
+mcmc_g4 <- dageneral(X, yobs, cw=cw_gamma4, iter=iter) 
 ```
 
 
-## how complex can the problem be implementable?
+Remove the influential observation patient 27.
+
+```{r}
+X_r <- X[-27, ]
+yobs_r <- yobs[-27, ]
+```
+
+```{r}
+# constant
+mcmc_rc <- dageneral(X_r, yobs_r, cw=cw_constant, iter=iter)
+```
+
+Compare results for beta(2,1), i.e.,  the slope of InSC \~ In140\_age. 
+
+```{r}
+sim <- data.frame(Model=rep(c("gamma2", "p", "gamma4", "rp"), each=(upper - lower + 1)), beta= c(mcmc$samples[lower:upper, dim], mcmc_c$samples[lower:upper, dim], mcmc_g4$samples[lower:upper, dim], mcmc_rc$samples[lower:upper, dim]))
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```
+
+Because of the influential observation patient 27, the "p" line which represents the normal error model, is quite different from the other lines. The "gamma2" line, which represents $t(4)$ error, and "gamma4" line, which represents $t(8)$, behave similarly.  With patient 27 removed, the "rp" line, which uses the normal error model without patient 27, agrees with the "gamma2" and "gamma4" lines, but of the "rp" line is smaller than the "gamma2" and "gamma4" lines. This implies that removing patient 27 may underestimate  uncertainties.
+
+
+
+## Monotone example
+
+We show an monotone missing structure situation by removing the  InSC values of observation 29 and 30.
+
+```{r}
+yobsm <- creatinine_data[c("InSC", "InWT", "InCR")]
+yobsm[29, 1] = NA
+yobsm[30, 1] = NA
+
+monm <- ismonotone(yobsm)
+```
+
+The data now is monotone. 
+
+```{r}
+monm$monotone
+```
+
+```{r}
+yobs1 <- monm$ynew
+```
+
+Shows the locations of the rows and columns in the original data.
+
+```{r}
+monm$ynew_column
+```
+```{r}
+monm$ynew_row
+```
+We should switch rows 29, 30 and 33, 34 to get the standard monotone format.
+
+The function calls the DA algorith, which is the most efficient one in this situation. 
+
+```{r}
+mcmcm <- dageneral(X, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
+```
+
+The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
+
+##  Data Augmenatation Algorithms Comparison
+
+
+When the missing structure is monotone, both the DA and DAI algorithms can be efficiently implemented. We showed that the DAI algorithm will never be faster than the corresponding DA version. We did an numerical experiment, calculating the effective sample sizes and effective sample sizes per minute. The DA algorithm is considerably more efficient even after considering the computation complexity. See our [paper](http://arxiv.org/abs/2212.01712) Section 4.4 and Section 5 for more details.
+
+
+## Efficient Problem Size
+
+In the example above, we have $d=3$ response, $p=2$ predictors and $n=34$ observations. The model can be implemented at a reasonable computation time at $d=20$, $p=5$ and $n=500$. The storage cost is also a burden if the question is too large. 
+
 
 
 # Appendix
 
-## Data Augmenatation Algorithms Comparison 
+## Data Augmenatation Algorithms in Different Situations
+
+We use an artificial data to implement data augmentation algorithms in different situations.
+
 ```{r}
 set.seed(1)
 library(GeneralizedHyperbolic)

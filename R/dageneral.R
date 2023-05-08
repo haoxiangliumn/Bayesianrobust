@@ -24,10 +24,10 @@ dageneral <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma,
   if(min(eigen(A, symmetric=TRUE)$values) < 0){
     stop("A should be Positive semidefinite")
   } 
-  if(dim(t(yobs))[1] == 1) # vector
-  {
-    yobs <- as.matrix(yobs) 
-  }
+  
+  yobs <- as.matrix(yobs) 
+  X <- as.matrix(X) 
+  
   if( ! missing(Ik)) {
     if( ! is.logical(Ik)){
       stop("Ik elements should be TRUE/FALSE logical values")

@@ -9,7 +9,9 @@ creatinine_data
 \details{
 This data is used in an illustrative example by Liu (1996).
 
-The data are from a clinical trial on 34 male patients with body weight (WT) in kg, serum creatinine (SC) concentration in mg/deciliter, age (AGE) in years, and endogenous creatinine (CR) clearance. Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable.
+The data are from a clinical trial on 34 male patients with body weight (WT) in kg, serum creatinine (SC) concentration in mg/deciliter, age (AGE) in years, and endogenous creatinine (CR) clearance. 
+InSC = In(SC), InWT = In(WT), InCR = In(CR), In140_AGE = In(140-AGE).
+Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable.
 There is one influential observation patient 27.
 }
 

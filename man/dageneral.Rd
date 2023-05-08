@@ -8,7 +8,7 @@ Data augmentation algorithms for Bayesian robust multivariate linear regression 
 dageneral(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull=FALSE)
 }
 \arguments{
-  \item{X}{ matrix. Feature matrix.}
+  \item{X}{ matrix. Feature matrix. If one wants to include intercept, remember to combine a column with all elements 1.}
   \item{yobs}{ matrix. Response matrix (with missing values NA).}
   \item{m}{ real number. Prior parameter. Default \code{ncol(yobs)}. } 
   \item{A}{ matrix. Positive semidefinite matrix in the prior. Default \code{diag(0, ncol(yobs))}.}   

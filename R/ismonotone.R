@@ -10,10 +10,8 @@ ismonotone <- function(yobs)
   #         ynew_column: vector. ynew (permuted) original column location in yobs.
   #         ynew_row: vector. ynew (permuted) original row location in yobs.
 
-  if(dim(t(yobs))[1] == 1) # vector
-  {
-    yobs <- as.matrix(yobs) 
-  }
+
+  yobs <- as.matrix(yobs) 
   I <- ! is.na(yobs) # missing index : observed TRUE  missing FALSE
   row_obs <- rowSums(I, na.rm = T) 
   row_sort <- order(row_obs, decreasing = TRUE) 
@@ -39,6 +37,7 @@ ismonotone <- function(yobs)
     monotone <- FALSE
   }
   names(col_sort) = names(yobs)
+  ynew = as.matrix(ynew)
   return(list(monotone = monotone, ynew = ynew, ynew_column = col_sort, ynew_row = row_sort))
 }
 
