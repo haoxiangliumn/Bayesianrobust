@@ -1,5 +1,6 @@
 \name{ismonotone}
 \alias{ismonotone}
+\alias{monotone}
 \title{Monotone data}
 \description{
 Check whether the data is monotone or not, and permute the rows and columns of the data to the standard monotone format.

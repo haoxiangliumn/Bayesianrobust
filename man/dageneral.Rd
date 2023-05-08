@@ -38,7 +38,7 @@ The \code{cw} function generates samples from the conditional weight distributio
 %Assume that \code{yobs} have \code{n} observations and each has \code{d} components. \code{yobs} is monotone if for the \code{i}th observation, \code{i = 1,...,n}, with \code{j_i} the first observed component, the \code{(j_i+1)}th to \code{d}th elements are all observed, and \code{j_i} is no smaller than \code{j_{i+1}}. Note that in practice, there are cases where the observed missing structure can be rearranged to become monotone by permuting the rows and columns of the response matrix.
 %If there are no missing data, the corresponding missing structure is monotone.
 
-{Prior:} We assume the following commonly used groups of priors: \deqn{\text{prior}(\beta,\Sigma)\propto |\Sigma|^{-(m+1)/2} \exp(-0.5 \text{tr}(\Sigma^{-1} A))}
+{Prior:} We assume the following commonly used groups of priors: \deqn{{prior}(\beta,\Sigma)\propto |\Sigma|^{-(m+1)/2} \exp(-0.5 {tr}(\Sigma^{-1} A))}
 The default values of \eqn{m} and \eqn{\Sigma} are the independence Jeffrey's prior.
 
 {Monotone:} See the paper for monotone missing structure definition and standard format. See \code{\link{monotone}} function for monotone checking and permutation into the standard format. 

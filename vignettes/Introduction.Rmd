@@ -4,7 +4,7 @@ author: "Haoxiang Li"
 date: "10/6/2022"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Bayesian Robust Multivariate Linear Regression with Incomplete Desponse}
+  %\VignetteIndexEntry{Bayesian Robust Multivariate Linear Regression with Incomplete Response}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -31,13 +31,15 @@ Consider the multivariate linear regression model
 $$ 
   \mathbf{Y}_i = \mathbf{B}^T \mathbf{x}_i + \mathbf{\Sigma}^{1/2} \mathbf{\varepsilon}_i,\ i \in \{1,\dots,n\},  
 $$
+where $\mathbf{B}$ is a $p\times d$ matrix of unknown regression coefficients, $\mathbf{\Sigma}$ is a $d\times d$ unknown positive definite scatter matrix, and $\mathbf{\varepsilon}_i, \; i\in\{1,\dots,n\}$, are $d\times1$ iid random errors.
+
 
 To model possible influential observations in normal errors, we use error distributions with heavy tails.
 Assume that the distribution of each $\mathbf{\varepsilon}_i$ is described by a scale mixture of multivariate normal densities, which takes the form
 $$
-f_{\text{err}}(\mathbf{\epsilon}) = \int_{0}^{\infty} \frac{w^{d/2}}{(2\pi)^{d/2}} \exp \left(-\frac{w}{2} \mathbf{\epsilon}^{T} \mathbf{\epsilon} \right) P_{mix}( w) , \quad \mathbf{\epsilon} \in \mathbb{R}^d.  
+f_{\text{err}}(\mathbf{\epsilon}) = \int_{0}^{\infty} \frac{w^{d/2}}{(2\pi)^{d/2}} \exp \left(-\frac{w}{2} \mathbf{\epsilon}^{T} \mathbf{\epsilon} \right) P_{mix}( w) , \quad \mathbf{\epsilon} \in \mathbb{R}^d,  
 $$
-$P_{mix}(\cdot)$ is a probability measure function on $\mathbb{R}^+$ referred to as the mixing distribution. 
+where $P_{mix}(\cdot)$ is a probability measure function on $\mathbb{R}^+$ referred to as the mixing distribution. 
 Gaussian mixtures constitute a variety of error distributions and are widely used for robust regression.
 For instance, when $P_{mix}(\cdot)$ corresponds to the $\text{Gamma}(v/2,v/2)$ distribution for some $v > 0$, the errors follow the multivariate $t$ distribution with $v$ degrees of freedom.
 
@@ -57,9 +59,10 @@ where $m\in \mathbb{R}$, $\mathbf{a} \in S_+^{d \times d}$, and $S_+^{d \times d
 
 we assume that the missing data mechanism is ignorable, which is true if the missing structure does not depend on model parameters and is independent of the data values.
 
-A missing structure is said to be monotone if it can be sorted into the following format after permuting the rows and columns.
-![The standard monotone format..](monotone.png){width=250px}
-The data without missing values is monotone.
+A missing structure is said to be monotone if it can be sorted into the following standard format below after permuting the rows and columns. The data without missing values is monotone.
+
+![The standard monotone format.](monotone.png){width=250px}
+
 
 The \code{ismonotone} function helps check whether the data is monotone or not and permutes the rows and columns of the data to the standard monotone format. 
 
@@ -75,21 +78,21 @@ ismonotone(data)
 
 ## The Data Augmentation Algorithms
 
-The posterior is almost always intractable in the sense that it is hard to calculate its features such as expectation and quantiles, forcing the use of MCMC samplers.
+The posterior is almost always intractable in the sense that it is hard to calculate its features such as expectation and quantiles, forcing the use of MCMC.
 [Liu, 1996](https://www.jstor.org/stable/2291740) proposed a data augmentation (DA) algorithm, or two-component Gibbs sampler, that can be used to sample from this distribution under monotone missing patterns. The algorithms contain two steps, the I step and the P step.
 
 
 When the missing data have a certain ``monotone" structure, the DA algorithm can be carried out without an intermediate step to impute the missing data.
 
 When the missing data do not possess a monotone structure, some missing entries need to be imputed if one wishes to implement the DA algorithm. We call this data augmentation algorithm with an intermediate imputation step (DAI).
-Let $\textbf{k}$ be the missing structure of $\textbf{y}$. Users have to specify a larger missing structure  $\textbf{k}'$, which represents the missing structure after mandatory imputation. $\textbf{k}'$ is larger than $\textbf{k}$ if all elements observed under $\textbf{k}$ are also observed under $\textbf{k}'$. 
+Let $\textbf{k}$ be the missing structure of $\textbf{y}$. Users can specify a larger missing structure  $\textbf{k}'$, which represents the missing structure after mandatory imputation. $\textbf{k}'$ is larger than $\textbf{k}$ if all elements observed under $\textbf{k}$ are also observed under $\textbf{k}'$. 
 
 
-In the R functions. the missing structure $\textbf{k}'$ corresponds to $Ik$, and $\textbf{k}$ corresponds to $I$.
+In the R functions. the missing structure $\textbf{k}'$ corresponds to $Ik$, and $\textbf{k}$ corresponds to $I$. The default $Ik$ represents fully observed.
 Users can use function \code{dageneral} to implement these algorithms. It will automatically find the best fit to sample from the posterior.
 
-To make sure the algorithm can be implemented efficiently, we need two weak conditions. The conditions are true in most situations. See the [paper](http://arxiv.org/abs/2212.01712) Condition H1 and H2, and Proposition 3 for more details. 
-We also develop conditions to guarantee a proper posterior. See the [paper](http://arxiv.org/abs/2212.01712) Theorem 7.
+To make sure the algorithm can be implemented efficiently, we need two weak conditions. The conditions are true in most situations. See the [paper](http://arxiv.org/abs/2212.01712) Conditions H1 and H2, and Proposition 3. 
+We also develop conditions to guarantee proper posteriors and geometric ergodicity. See the [paper](http://arxiv.org/abs/2212.01712) Theorem 7.
 
 
 
@@ -105,7 +108,7 @@ The data are from a clinical trial on 34 male patients with body weight (WT) in 
 InSC = In(SC), InWT = In(WT), InCR = In(CR), In140_AGE = In(140-AGE).
 Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable. 
 There is one influential observation patient 27.
-We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictors (1 represents the intercept).
+We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictors (with intercept).
 
 ### Missing structure
 
@@ -179,6 +182,7 @@ Constant. This corresponds to the normal error.
 # constant
 mcmc_c <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
 ```
+
 ### (Functions to sample from the conditional weight distributions)
 
 Function 
@@ -276,9 +280,9 @@ In the example above, we have $d=3$ response, $p=2$ predictors, and $n=34$ obser
 
 ## Data Augmentation Algorithms in Different Situations
 
-We use artificial data to implement data augmentation algorithms in different situations.
+Here is an example on implementing data augmentation algorithms in different situations using artificial data. Interested readers can run the code below by themselves.
 
-```{r}
+```{r, eval = FALSE}
 set.seed(1)
 library(GeneralizedHyperbolic)
 library(LaplacesDemon)
@@ -311,7 +315,7 @@ rm(data_d)
 
 
 
-```{r}
+```{r, eval = FALSE}
 # Parameters
 d <- ncol(yobs)
 m <- d # prior parameter
@@ -325,7 +329,7 @@ dim <- 2 # beta_21
 
 
 
-```{r}
+```{r, eval = FALSE}
 # Bayesian robust multivariate linear regression DA algorithm
 ## There is no missing value. In this situation, the mda_gibbs and dami_gibbs coincide.
 ## cw_gamma default is gamma(2, 2)
@@ -338,7 +342,7 @@ ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("De
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 # create monotone missing data
 for (i in c(47:50)) {
   yobs[i, 1] <- NA
@@ -354,7 +358,7 @@ sim <- data.frame(Model=rep(c("dag", "daig"), each=(upper - lower + 1)), beta=c(
 ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
 ```
 
-```{r}
+```{r, eval = FALSE}
 # impute missing response values
 resdagy <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter, yfull=TRUE)
 resdaigy <- dageneral(X, yobs, m, A, cw=cw_gamma,
@@ -367,7 +371,7 @@ ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("yimputed") + ylab
 
 
 
-```{r}
+```{r, eval = FALSE}
 # create non-monotone missing data
 for (i in c(47:50)) {
   yobs[i, 1] <- NA

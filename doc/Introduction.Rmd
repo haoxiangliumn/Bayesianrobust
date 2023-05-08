@@ -1,10 +1,10 @@
 ---
-title: "Bayesian Robust Multivariate Linear Regression with Incomplete Desponse"
+title: "Bayesian Robust Multivariate Linear Regression with Incomplete Response"
 author: "Haoxiang Li"
 date: "10/6/2022"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Bayesian Robust Multivariate Linear Regression with Incomplete Desponse}
+  %\VignetteIndexEntry{Bayesian Robust Multivariate Linear Regression with Incomplete Response}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,22 +16,34 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This vignette is an introduction of Bayesian robust multivariate linear regression (with possible incomplete data), and the data augmentation algorithms to sample from the posterior. See our [paper](http://arxiv.org/abs/2212.01712) for technical details.
+
+```{r}
+set.seed(1)
+library(Bayesianrobust) # load our package
+```
+
+# Introduction
+
 ## Model
 
 Consider the multivariate linear regression model
 $$ 
   \mathbf{Y}_i = \mathbf{B}^T \mathbf{x}_i + \mathbf{\Sigma}^{1/2} \mathbf{\varepsilon}_i,\ i \in \{1,\dots,n\},  
 $$
+where $\mathbf{B}$ is a $p\times d$ matrix of unknown regression coefficients, $\mathbf{\Sigma}$ is a $d\times d$ unknown positive definite scatter matrix, and $\mathbf{\varepsilon}_i, \; i\in\{1,\dots,n\}$, are $d\times1$ iid random errors.
 
-To allow for error distributions with heavy tails, and handle possible influential observations in linear regression with normal errors, assume that the distribution of each $\mathbf{\varepsilon}_i$ is described by a scale mixture of multivariate normal densities, which takes the form
+
+To model possible influential observations in normal errors, we use error distributions with heavy tails.
+Assume that the distribution of each $\mathbf{\varepsilon}_i$ is described by a scale mixture of multivariate normal densities, which takes the form
 $$
-f_{\text{err}}(\mathbf{\epsilon}) = \int_{0}^{\infty} \frac{w^{d/2}}{(2\pi)^{d/2}} \exp \left(-\frac{w}{2} \mathbf{\epsilon}^{T} \mathbf{\epsilon} \right) P_{mix}( w) , \quad \mathbf{\epsilon} \in \mathbb{R}^d.  
+f_{\text{err}}(\mathbf{\epsilon}) = \int_{0}^{\infty} \frac{w^{d/2}}{(2\pi)^{d/2}} \exp \left(-\frac{w}{2} \mathbf{\epsilon}^{T} \mathbf{\epsilon} \right) P_{mix}( w) , \quad \mathbf{\epsilon} \in \mathbb{R}^d,  
 $$
-$P_{mix}(\cdot)$ is a probability measure function on $\mathbb{R}^+$ referred to as the mixing distribution. 
-Gaussian mixtures constitute a variety of error distributions, and are widely used for robust regression.
+where $P_{mix}(\cdot)$ is a probability measure function on $\mathbb{R}^+$ referred to as the mixing distribution. 
+Gaussian mixtures constitute a variety of error distributions and are widely used for robust regression.
 For instance, when $P_{mix}(\cdot)$ corresponds to the $\text{Gamma}(v/2,v/2)$ distribution for some $v > 0$, the errors follow the multivariate $t$ distribution with $v$ degrees of freedom.
 
-In the incomplete response situation, the likelihood can be adjusted accordingly. 
+
 
 
 Consider a Bayesian setting.
@@ -39,104 +51,245 @@ Assume that $(\mathbf{B},\mathbf{\Sigma})$ has the  following prior density:
 $$
 	p_{\scriptsize\mbox{prior}}(\mathbf{\beta}, \mathbf{\varsigma})  	\propto |\mathbf{\varsigma}|^{-(m+1)/2} \exp \left[-\frac{1}{2} \operatorname{tr} \left(\mathbf{\varsigma}^{-1} \mathbf{a} \right)\right], \quad \mathbf{\beta} \in \mathbb{R}^{p \times d}, \; \mathbf{\varsigma} \in S_+^{d \times d},
 $$
-where $m\in \mathbb{R}$, $\mathbf{a} \in S_+^{d \times d}$, and $S_+^{d \times d}$ is the convex cone of $d \times d$ (symmetric) positive semi-definite real matrices.  For instance, the independence Jeffrey's prior corresponds to $m=d$ and $\mathbf{a}=0$, and non-informative constant prior corresponds to $m=-1$ and $\mathbf{a}=0$.
+where $m\in \mathbb{R}$, $\mathbf{a} \in S_+^{d \times d}$, and $S_+^{d \times d}$ is the convex cone of $d \times d$ (symmetric) positive semi-definite real matrices.  For instance, the independence Jeffrey's prior corresponds to $m=d$ and $\mathbf{a}=0$, and the non-informative constant prior corresponds to $m=-1$ and $\mathbf{a}=0$.
 
 
 
-## Monotone
+## Incomplete Data
 
-A realized missing structure $\mathbf{k} = (k_{i,j})_{i=1}^n{}_{j=1}^d \in \{0,1\}^{n \times d}$, where $k_{i,j} = 1$ if the $(i,j)$ element of $\mathbf{y}$ is observed, is said to be monotone if the following conditions hold:
+we assume that the missing data mechanism is ignorable, which is true if the missing structure does not depend on model parameters and is independent of the data values.
 
+A missing structure is said to be monotone if it can be sorted into the following standard format below after permuting the rows and columns. The data without missing values is monotone.
 
-1. If $k_{i,j} = 1$ for some $i \in \{1,\dots,n\}$ and $j \in \{1,\dots,d\}$, then $k_{i',j'} = 1$ whenever $i' \leq i$ and $j' \geq j$.
-	
-2. $k_{i,d} = 1$ for $i \in \{1,\dots,n\}$.
-
-Clearly, fully observed response is monotone.
-Note that in practice, there are cases where the observed missing structure is apparently not monotone, but 
-the observed missing structure can be re-arranged to become monotone by permuting the rows and columns of the response matrix. A monotone structure is as follows.
-
-![The observed response under a monotoen structure.](monotone.png){width=250px}
-
-In the R functions, $yobs$ is the response matrix we observed associated with missing structure $I$.  
+![The standard monotone format.](monotone.png){width=250px}
 
 
-
-## The DA and DAI algorithms
-
-The posterior is almost always intractable in the sense that it is hard to calculate its features such as expectation and quantiles, forcing the use of MCMC samplers.
-[Liu, 1996](https://www.jstor.org/stable/2291740) proposed a data augmentation (DA) algorithm, or two-component Gibbs sampler, that can be used to sample from this distribution under monotone missing patterns.
-
-
-Given the current state $(\mathbf{B}(t), \mathbf{\Sigma}(t)) = (\mathbf{\beta},\mathbf{\varsigma})$, 
-
-the DA algorithm draws the next state $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$ using the following steps:
-
-\textbf{I step.} Draw $\mathbf{W}^* = (W_1^*,\dots,W_n^*)$ from the conditional distribution of $\mathbf{W}$ given $(\mathbf{B}, \mathbf{\Sigma}, \mathbf{Y}_{(\mathbf{k})}) = (\mathbf{\beta}, \mathbf{\varsigma}, \mathbf{y}_{(\mathbf{k})})$.
-	Call the observed value $\mathbf{w}$.
-	
-\textbf{P step.} Draw $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$ from the conditional distribution of $(\mathbf{B}, \mathbf{\Sigma})$ given $(\mathbf{W}, \mathbf{Y}_{(\mathbf{k})}) = (\mathbf{w}, \mathbf{y}_{(\mathbf{k})})$.
-
-To impute missing response values, one can add a post hoc I step 
-
-\textbf{Post hoc I step.} Draw $\mathbf{Z}(t+1)$ from 
-	the conditional distribution of $\mathbf{Y}_{(\mathbf{k}_0 - \mathbf{k})}$ given $(\mathbf{Y}_{(\mathbf{k})}, \mathbf{W}, \mathbf{B}, \mathbf{\Sigma}) = (\mathbf{y}_{(\mathbf{k})}, \mathbf{w}, \mathbf{\beta}^*,\mathbf{\varsigma}^*)$, where $(\mathbf{\beta}^*,\mathbf{\varsigma}^*)$ is the sampled value of $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$.
-
-Parameter $\textit{yfull}$ in sampling functions indicates whether  output the missing responses or not. 
-
-The $da$ implements the DA algorithm when the response we observed is monotone.
-
-When the missing data do not posses a monotone structure, some missing entries need to be imputed if one wishes to implement the DA algorithm. We call this data augmentation algorithm with an intermediate imputation step (DAI).
-
-
-
-Let $\textbf{k}'$ be a missing structure larger than $\textbf{k}$. $\textbf{k}'$ is larger than $\textbf{k}$ if for all nonzero elements in $\textbf{k}$, the corresponding elements in $\textbf{k}'$ are also nonzero.
-
-The DAI algorithm draws the next state $(\mathbf{B}(t+1),\mathbf{\Sigma}(t+1))$ using the following steps.
-
-\textbf{I1 step.} Draw $\mathbf{W}^* = (W_1^*,\dots,W_n^*)$ from the conditional distribution of $\mathbf{W}$ given $(\mathbf{B}, \mathbf{\Sigma}, \mathbf{Y}_{(\mathbf{k})}) = (\mathbf{\beta},\mathbf{\varsigma}, \mathbf{y}_{(\mathbf{k})})$. Call the sampled value $\mathbf{w}$.
-	
-\textbf{I2 step.} Draw $\mathbf{Y}_{(\mathbf{k}' - \mathbf{k})}^*$ from 
-	the conditional distribution of $\mathbf{Y}_{(\mathbf{k}' - \mathbf{k})}$ given $(\mathbf{Y}_{i,(\mathbf{k})}, \mathbf{W}, \mathbf{B}, \mathbf{\Sigma}) = (\mathbf{y}_{i,(\mathbf{k})}, \mathbf{w}, \mathbf{\beta}, \mathbf{\varsigma})$.
-	Call the  sampled value $\mathbf{z}$.
-	
-\textbf{P step.} Draw $(\mathbf{B}(t+1), \mathbf{\Sigma}(t+1))$ from the conditional distribution of $(\mathbf{B}, \mathbf{\Sigma})$ given $(\mathbf{W}, \mathbf{Y}_{(\mathbf{k})}, \mathbf{Y}_{(\mathbf{k}' - \mathbf{k})}) = (\mathbf{w}, \mathbf{y}_{(\mathbf{k})}, \mathbf{z})$.
-
-Use the notation in the R functions. $\textbf{k}'$ corresponds to $Ik$, and $\textbf{k}$ corresponds to $I$.
-
-The $dageneral$ implements the DAI algorithm, and impute the response to fully observed in the I2 step, when the response we observed is monotone.
-
-The $daif$ implements the DAI algorithm, and impute the response to fully observed in the I2 step. The response has no missing pattern restrictions.
-
-The $dai$ implements the DAI algorithm, and impute the response to $Ik$ in the I2 step. The response has no missing pattern restrictions.
-
-## Condition
-
-To make the algorithms well-defined, the following H1 and H2 conditions are necessary. There exists a monotone missing structure $\mathbf{k}'$ with $\mathbf{k}'<\mathbf{k}$, such that $\mathbf{y}'$ associated with $\mathbf{k}'$. H1 is intricate. See the $paper$ for the details. 
-A special case of H1 is to pick fully observed part $\mathbf{y}'$, and let $\mathbf{X}'$ be the corresponding observed features.
- H1 can be simplified as:
-\begin{equation} \label{da-condition-0} 
-	r(\mathbf{y}': \mathbf{X}') = p + d, \quad n > p + 2d - m - 1. 
-\end{equation}
-
-For condition H2, to ensure that the conditional density is always proper, we assume throughout the following.
-\begin{equation}\label{hh}
-	\int_{0}^{\infty} w^{d/2} \, P_{mix}(dw) <\infty.
-\end{equation}
-
-
-## Implement
+The \code{ismonotone} function helps check whether the data is monotone or not and permutes the rows and columns of the data to the standard monotone format. 
 
 ```{r}
-set.seed(1)
-library(Bayesianrobust) # load our package
+# 1 not monotone
+a = c(NA, 1,4,NA,5,9)
+b = c(2, NA, 3,5,6,NA)
+c = c(2,4,6,NA, 5,6)
+data = data.frame(a,b,c)
+ismonotone(data)
+```
 
+
+## The Data Augmentation Algorithms
+
+The posterior is almost always intractable in the sense that it is hard to calculate its features such as expectation and quantiles, forcing the use of MCMC.
+[Liu, 1996](https://www.jstor.org/stable/2291740) proposed a data augmentation (DA) algorithm, or two-component Gibbs sampler, that can be used to sample from this distribution under monotone missing patterns. The algorithms contain two steps, the I step and the P step.
+
+
+When the missing data have a certain ``monotone" structure, the DA algorithm can be carried out without an intermediate step to impute the missing data.
+
+When the missing data do not possess a monotone structure, some missing entries need to be imputed if one wishes to implement the DA algorithm. We call this data augmentation algorithm with an intermediate imputation step (DAI).
+Let $\textbf{k}$ be the missing structure of $\textbf{y}$. Users can specify a larger missing structure  $\textbf{k}'$, which represents the missing structure after mandatory imputation. $\textbf{k}'$ is larger than $\textbf{k}$ if all elements observed under $\textbf{k}$ are also observed under $\textbf{k}'$. 
+
+
+In the R functions. the missing structure $\textbf{k}'$ corresponds to $Ik$, and $\textbf{k}$ corresponds to $I$. The default $Ik$ represents fully observed.
+Users can use function \code{dageneral} to implement these algorithms. It will automatically find the best fit to sample from the posterior.
+
+To make sure the algorithm can be implemented efficiently, we need two weak conditions. The conditions are true in most situations. See the [paper](http://arxiv.org/abs/2212.01712) Conditions H1 and H2, and Proposition 3. 
+We also develop conditions to guarantee proper posteriors and geometric ergodicity. See the [paper](http://arxiv.org/abs/2212.01712) Theorem 7.
+
+
+
+
+# R Implementation
+
+
+## Illustrative Example
+
+The creatinine clearance data is introduced by Shih and Weisberg (1986), and is used in an illustrative example by Liu (1996).
+
+The data are from a clinical trial on 34 male patients with body weight (WT) in kg, serum creatinine (SC) concentration in mg/deciliter, age (AGE) in years, and endogenous creatinine (CR) clearance. 
+InSC = In(SC), InWT = In(WT), InCR = In(CR), In140_AGE = In(140-AGE).
+Of the 34 male patients, 2 had no record in WT and 4 were missing SC. The missingness is assumed to be ignorable. 
+There is one influential observation patient 27.
+We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictors (with intercept).
+
+### Missing structure
+
+Check whether the response is monotone or not after permuting the rows and columns.
+
+```{r}
+mon <- ismonotone(creatinine_data[c("InSC", "InWT", "InCR")])
+```
+
+The response is not monotone:
+
+```{r}
+mon$monotone
+```
+Response data (after rearranging the rows and columns).
+
+When the missing structure is monotone. Use the rearranged data for later analysis, since the data is required to be in the standard monotone format. 
+
+When the missing structure is not monotone. It is suggested to use the rearranged data. The results are the same, and the permuted version displays the missing structure better.
+
+
+```{r}
+yobs <- mon$ynew
+```
+
+Shows the locations of the rows and columns in the original data.
+
+```{r}
+mon$ynew_column
+```
+```{r}
+mon$ynew_row
+```
+
+### Implement the data augmentation algorithms
+
+Suppose we want the independence Jeffrey's prior with mixing distribution Gamma(2,2). 
+
+```{r}
+iter = 5000
+X = cbind(1, creatinine_data["In140_AGE"])
+mcmc <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
+```
+
+The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
+
+
+
+
+### Assess the MCMC samples
+
+\code{samples}
+ stores \code{iter+1} MCMC samples. The sampled matrices are vectorized by stacking the columns. 
+ For the ith sample, \eqn{\beta(i)} is \code{as.matrix(samples[i+1, 1:p\*d], nrow=p, ncol=d)}, and \eqn{\Sigma(i)} is \code{as.matrix(samples[i+1, (p\*d+1):p\*d+d^2], nrow=d, ncol=d)}. If \code{yfull} is \code{TRUE}, the rest of the elements in each row are imputed missing components of \code{yobs}.
+
+
+```{r}
+library(ggplot2)
+lower <- 10 # burn-in
+upper <- iter + 1
+dim <- 2 # beta(2,1) 
+sim <- data.frame(Model=rep(c("gamma"), each=(upper - lower + 1)), beta= mcmc$samples[lower:upper, dim])
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```
+
+We try more mixing distribution choices.
+
+Constant. This corresponds to the normal error.
+
+```{r}
+# constant
+mcmc_c <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
+```
+
+### (Functions to sample from the conditional weight distributions)
+
+Function 
+\code{cw(di,ri,...)} draws samples from the conditional mixing distribution, where
+$$ P(w) \propto w^{{di}/2}\exp(-{ri}w/2)P_{mix}(dw).$$
+
+```{r}
+# gamma(a=4, b=4)
+cw_gamma4 <- function(di, ri) {
+  return(cw_gamma0(d=di, ri=ri, a=4, b=4))
+}
+# where
+#cw_gamma0 <- function(di, ri, a=2, b=2) {
+#  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))
+#}
+mcmc_g4 <- dageneral(X, yobs, cw=cw_gamma4, iter=iter) 
+```
+
+
+Remove the influential observation patient 27.
+
+```{r}
+X_r <- X[-27, ]
+yobs_r <- yobs[-27, ]
+```
+
+```{r}
+# constant
+mcmc_rc <- dageneral(X_r, yobs_r, cw=cw_constant, iter=iter)
+```
+
+Compare results for beta(2,1), i.e.,  the slope of InSC \~ In140\_age. 
+
+```{r}
+sim <- data.frame(Model=rep(c("gamma2", "p", "gamma4", "rp"), each=(upper - lower + 1)), beta= c(mcmc$samples[lower:upper, dim], mcmc_c$samples[lower:upper, dim], mcmc_g4$samples[lower:upper, dim], mcmc_rc$samples[lower:upper, dim]))
+ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
+```
+
+Because of the influential observation patient 27, the "p" line which represents the normal error model, is quite different from the other lines. The "gamma2" line, which represents $t(4)$ error, and "gamma4" line, which represents $t(8)$, behave similarly.  With patient 27 removed, the "rp" line, which uses the normal error model without patient 27, agrees with the "gamma2" and "gamma4" lines, but the tail of the "rp" line is smaller than the "gamma2" and "gamma4" lines. This implies that removing patient 27 may underestimate uncertainties.
+
+
+
+## Monotone Example
+
+We show a monotone missing structure situation by removing the  InSC values of observations 29 and 30.
+
+```{r}
+yobsm <- creatinine_data[c("InSC", "InWT", "InCR")]
+yobsm[29, 1] = NA
+yobsm[30, 1] = NA
+
+monm <- ismonotone(yobsm)
+```
+
+The data now is monotone. 
+
+```{r}
+monm$monotone
+```
+
+```{r}
+yobs1 <- monm$ynew
+```
+
+Shows the locations of the rows and columns in the original data.
+
+```{r}
+monm$ynew_column
+```
+```{r}
+monm$ynew_row
+```
+We should switch rows 29, 30 and 33, 34 to get the standard monotone format.
+
+The function calls the DA algorithm, which is the most efficient one in this situation. 
+
+```{r}
+mcmcm <- dageneral(X, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
+```
+
+The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
+
+##  Data Augmentation Algorithms Comparison
+
+
+When the missing structure is monotone, both the DA and DAI algorithms can be efficiently implemented. We showed that the DAI algorithm will never be faster than the corresponding DA version. We did a numerical experiment, calculating the effective sample sizes and effective sample sizes per minute. The DA algorithm is considerably more efficient even after considering the computation complexity. See our [paper](http://arxiv.org/abs/2212.01712) Section 4.4 and Section 5 for more details.
+
+
+## Efficient Problem Size
+
+In the example above, we have $d=3$ response, $p=2$ predictors, and $n=34$ observations. The model can be implemented at a reasonable computation time at $d=20$, $p=100$, and $n=500$. The storage cost is also a burden if the question is too large. 
+
+
+# Appendix
+
+## Data Augmentation Algorithms in Different Situations
+
+Here is an example on implementing data augmentation algorithms in different situations using artificial data. Interested readers can run the code below by themselves.
+
+```{r, eval = FALSE}
+set.seed(1)
 library(GeneralizedHyperbolic)
 library(LaplacesDemon)
 library(matlib)
 library(MASS)
 library(matrixNormal)
-library(ggplot2)
+
 # generate data
 library(mvtnorm)
 n <- 50
@@ -162,21 +315,21 @@ rm(data_d)
 
 
 
-```{r}
+```{r, eval = FALSE}
 # Parameters
 d <- ncol(yobs)
 m <- d # prior parameter
 A <- matrix(0, nrow=d, ncol=d) # matrix in the prior
 
 iter <- 1000
-lower <- 1 # burn-in
+lower <- 10 # burn-in
 upper <- iter + 1
 dim <- 2 # beta_21 
 ```
 
 
 
-```{r}
+```{r, eval = FALSE}
 # Bayesian robust multivariate linear regression DA algorithm
 ## There is no missing value. In this situation, the mda_gibbs and dami_gibbs coincide.
 ## cw_gamma default is gamma(2, 2)
@@ -189,7 +342,7 @@ ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("De
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 # create monotone missing data
 for (i in c(47:50)) {
   yobs[i, 1] <- NA
@@ -205,7 +358,7 @@ sim <- data.frame(Model=rep(c("dag", "daig"), each=(upper - lower + 1)), beta=c(
 ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
 ```
 
-```{r}
+```{r, eval = FALSE}
 # impute missing response values
 resdagy <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter, yfull=TRUE)
 resdaigy <- dageneral(X, yobs, m, A, cw=cw_gamma,
@@ -218,7 +371,7 @@ ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("yimputed") + ylab
 
 
 
-```{r}
+```{r, eval = FALSE}
 # create non-monotone missing data
 for (i in c(47:50)) {
   yobs[i, 1] <- NA
@@ -236,3 +389,14 @@ resdaifg <- dageneral(X, yobs, m, A, cw=cw_gamma, iter=iter) # daif
 sim <- data.frame(Model=rep(c("daig", "daifg"), each=(upper - lower + 1)), beta=c(resdag$samples[lower:upper, dim], resdaig$samples[lower:upper, dim]))
 ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
 ```
+
+
+# References
+
+
+
+Li, Haoxiang, Qian Qin, and Galin L. Jones. "Convergence Analysis of Data Augmentation Algorithms for Bayesian Robust Multivariate Linear Regression with Incomplete Data." arXiv preprint arXiv:2212.01712 (2022).
+
+Liu, Chuanhai. "Bayesian robust multivariate linear regression with incomplete data." Journal of the American Statistical Association 91.435 (1996): 1219-1227.
+
+Shih, Weichung J., and Sanford Weisberg. "Assessing influence in multiple linear regression with incomplete data." Technometrics 28.3 (1986): 231-239.

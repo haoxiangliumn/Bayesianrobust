@@ -31,7 +31,7 @@ Function
 \code{cw(di,ri,...)} draws samples from the conditional mixing distribution, where
 \deqn{P(w) \propto w^{\code{di}/2}\exp(-\code{ri}*w/2)P_{mix}(dw).}
 
-\eqn{P_{mix}(dw)} is the mixing distribution for robust regression. A well-known example is that when \eqn{P_{mix}} follows \eqn{\text{gamma}(v/2, v/2)}, the errors follow multivariate \eqn{t(v)} distribution.
+\eqn{P_{mix}(dw)} is the mixing distribution for robust regression. A well-known example is that when \eqn{P_{mix}} follows gamma\eqn{(v/2, v/2)}, the errors follow multivariate \eqn{t(v)} distribution.
 See \url{http://arxiv.org/abs/2212.01712} for more details.
 %\code{...} Parameters in the mixing distribution. 
  
