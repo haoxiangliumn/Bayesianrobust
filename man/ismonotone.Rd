@@ -6,10 +6,11 @@
 Check whether the data is monotone or not, and permute the rows and columns of the data to the standard monotone format.
 }
 \usage{
-ismonotone(yobs)
+ismonotone(yobs, X)
 }
 \arguments{
   \item{yobs}{ matrix. Response matrix (with missing values NA).}
+  \item{X}{matrix. Feature matrix.}
 }
 \value{
 Returns a list.
@@ -19,23 +20,28 @@ Returns a list.
 
 \item{ynew_column}{vector. \code{ynew} (permuted) original column location in \code{yobs}.}
 
-\item{ynew_row}{\code{ynew} (permuted) original row location in \code{yobs}.
-}}
+\item{ynew_row}{matrix. \code{ynew} (permuted) original row location in \code{yobs}.}
+
+\item{Xnew}{matrix. The corresponding feature matrix after rearranging the rows.} 
+
+\item{permute}{logic. TRUE if permutation is needed to transform \code{yobs} into the standard monotone format; FALSE if no need to permute.}
+}
 
 
 
 \examples{
 # 1 not monotone
-a = c(NA, 1,4,NA,5,9)
-b = c(2, NA, 3,5,6,NA)
-c = c(2,4,6,NA, 5,6)
-data = data.frame(a,b,c)
-ismonotone(data)
+a <- c(NA, 1, 4, NA, 5, 9)
+b <- c(2, NA, 3, 5, 6, NA)
+c <- c(2, 4, 6, NA, 5, 6)
+X <- c(1, 2, 3, 4, 5, 6)
+data = data.frame(a, b, c)
+ismonotone(data, X)
 
 # 2 monotone
 a = c(4, 1,4,NA,5,9)
 b = c(2, NA, 3,NA,6,NA)
 c = c(2,4,6,NA, 5,6)
 data = data.frame(a,b,c)
-ismonotone(data)
+ismonotone(data, X)
 }
