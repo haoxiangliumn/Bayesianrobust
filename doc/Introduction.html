@@ -536,7 +536,7 @@ distribution Gamma(2,2).</p>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>mcmc <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs, yobs, <span class="at">m=</span><span class="fu">ncol</span>(yobs), <span class="at">A=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(yobs)), <span class="at">cw=</span>cw_gamma, <span class="at">iter=</span>iter) </span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;daif&quot;</span></span></code></pre></div>
 <p>The algorithm generates a Markov chain with length 5000. And the
-computation time is 1.0247915148735.</p>
+computation time is 1.74.</p>
 </div>
 <div id="assess-the-mcmc-samples" class="section level3">
 <h3>Assess the MCMC samples</h3>
@@ -628,7 +628,7 @@ in this situation.</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>mcmcm <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs1, yobs1, <span class="at">m=</span><span class="fu">ncol</span>(yobs1),<span class="at">A=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(yobs1)), <span class="at">cw=</span>cw_gamma, <span class="at">iter=</span>iter) </span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;da&quot;</span></span></code></pre></div>
 <p>The algorithm generates a Markov chain with length 5000. And the
-computation time is 1.0247915148735.</p>
+computation time is 1.74.</p>
 </div>
 <div id="data-augmentation-algorithms-comparison" class="section level2">
 <h2>Data Augmentation Algorithms Comparison</h2>

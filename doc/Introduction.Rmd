@@ -167,7 +167,7 @@ iter <- 5000
 mcmc <- dageneral(xobs, yobs, m=ncol(yobs), A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
 ```
 
-The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
+The algorithm generates a Markov chain with length `r iter`. And the computation time is `r round(mcmc$time,2)`.
 
 
 
@@ -292,7 +292,7 @@ The function calls the DA algorithm, which is the most efficient one in this sit
 mcmcm <- dageneral(xobs1, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
 ```
 
-The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
+The algorithm generates a Markov chain with length `r iter`. And the computation time is `r round(mcmc$time,2)`.
 
 ##  Data Augmentation Algorithms Comparison
 
