@@ -244,11 +244,11 @@ Because of the influential observation patient 27, the "p" line which represents
 We show a monotone missing structure situation by removing the  InSC values of observations 29 and 30.
 
 ```{r}
-yobsm <- creatinine_data[c("InSC", "InWT", "InCR")]
-yobsm[29, 1] = NA
-yobsm[30, 1] = NA
+ym <- creatinine_data[c("InSC", "InWT", "InCR")]
+ym[29, 1] = NA
+ym[30, 1] = NA
 
-monm <- ismonotone(yobsm, xobs)
+monm <- ismonotone(ym, x)
 ```
 
 The data now is monotone. 

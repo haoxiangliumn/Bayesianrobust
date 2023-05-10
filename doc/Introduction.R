@@ -11,20 +11,28 @@ library(Bayesianrobust) # load our package
 
 ## -----------------------------------------------------------------------------
 # 1 not monotone
-a = c(NA, 1,4,NA,5,9)
-b = c(2, NA, 3,5,6,NA)
-c = c(2,4,6,NA, 5,6)
-data = data.frame(a,b,c)
-ismonotone(data)
+a <- c(NA, 1, 4, NA, 5, 9)
+b <- c(2, NA, 3, 5, 6, NA)
+c <- c(2, 4, 6, NA, 5, 6)
+x <- c(1, 2, 3, 4, 5, 6)
+yobs <- data.frame(a, b, c)
+ismonotone(yobs, x)
 
 ## -----------------------------------------------------------------------------
-mon <- ismonotone(creatinine_data[c("InSC", "InWT", "InCR")])
+# get data
+x <- cbind(1, creatinine_data["In140_AGE"]) # include intercept features
+y <- creatinine_data[c("InSC", "InWT", "InCR")] # responses
+mon <- ismonotone(y, x)
 
 ## -----------------------------------------------------------------------------
 mon$monotone
 
 ## -----------------------------------------------------------------------------
+mon$permute
+
+## -----------------------------------------------------------------------------
 yobs <- mon$ynew
+xobs <- mon$xnew
 
 ## -----------------------------------------------------------------------------
 mon$ynew_column
@@ -33,9 +41,8 @@ mon$ynew_column
 mon$ynew_row
 
 ## -----------------------------------------------------------------------------
-iter = 5000
-X = cbind(1, creatinine_data["In140_AGE"])
-mcmc <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
+iter <- 5000
+mcmc <- dageneral(xobs, yobs, m=ncol(yobs), A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
 
 ## -----------------------------------------------------------------------------
 library(ggplot2)
@@ -47,7 +54,7 @@ ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("De
 
 ## -----------------------------------------------------------------------------
 # constant
-mcmc_c <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
+mcmc_c <- dageneral(xobs, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
 
 ## -----------------------------------------------------------------------------
 # gamma(a=4, b=4)
@@ -58,32 +65,36 @@ cw_gamma4 <- function(di, ri) {
 #cw_gamma0 <- function(di, ri, a=2, b=2) {
 #  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))
 #}
-mcmc_g4 <- dageneral(X, yobs, cw=cw_gamma4, iter=iter) 
+mcmc_g4 <- dageneral(xobs, yobs, cw=cw_gamma4, iter=iter) 
 
 ## -----------------------------------------------------------------------------
-X_r <- X[-27, ]
+xobs_r <- xobs[-27, ]
 yobs_r <- yobs[-27, ]
 
 ## -----------------------------------------------------------------------------
 # constant
-mcmc_rc <- dageneral(X_r, yobs_r, cw=cw_constant, iter=iter)
+mcmc_rc <- dageneral(xobs_r, yobs_r, cw=cw_constant, iter=iter)
 
 ## -----------------------------------------------------------------------------
 sim <- data.frame(Model=rep(c("gamma2", "p", "gamma4", "rp"), each=(upper - lower + 1)), beta= c(mcmc$samples[lower:upper, dim], mcmc_c$samples[lower:upper, dim], mcmc_g4$samples[lower:upper, dim], mcmc_rc$samples[lower:upper, dim]))
 ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("Density")
 
 ## -----------------------------------------------------------------------------
-yobsm <- creatinine_data[c("InSC", "InWT", "InCR")]
-yobsm[29, 1] = NA
-yobsm[30, 1] = NA
+ym <- creatinine_data[c("InSC", "InWT", "InCR")]
+ym[29, 1] = NA
+ym[30, 1] = NA
 
-monm <- ismonotone(yobsm)
+monm <- ismonotone(ym, x)
 
 ## -----------------------------------------------------------------------------
 monm$monotone
 
 ## -----------------------------------------------------------------------------
+monm$permute
+
+## -----------------------------------------------------------------------------
 yobs1 <- monm$ynew
+xobs1 <- monm$xnew
 
 ## -----------------------------------------------------------------------------
 monm$ynew_column
@@ -92,7 +103,7 @@ monm$ynew_column
 monm$ynew_row
 
 ## -----------------------------------------------------------------------------
-mcmcm <- dageneral(X, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
+mcmcm <- dageneral(xobs1, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
 
 ## ---- eval = FALSE------------------------------------------------------------
 #  set.seed(1)

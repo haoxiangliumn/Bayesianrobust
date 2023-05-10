@@ -68,13 +68,14 @@ The \code{ismonotone} function helps check whether the data is monotone or not a
 
 ```{r}
 # 1 not monotone
-a = c(NA, 1,4,NA,5,9)
-b = c(2, NA, 3,5,6,NA)
-c = c(2,4,6,NA, 5,6)
-data = data.frame(a,b,c)
-ismonotone(data)
+a <- c(NA, 1, 4, NA, 5, 9)
+b <- c(2, NA, 3, 5, 6, NA)
+c <- c(2, 4, 6, NA, 5, 6)
+x <- c(1, 2, 3, 4, 5, 6)
+yobs <- data.frame(a, b, c)
+ismonotone(yobs, x)
 ```
-
+In this example, the missing structure of the data is not monotone. We recommend to permute the rows and columns of the data.   
 
 ## The Data Augmentation Algorithms
 
@@ -115,30 +116,44 @@ We use (InSC, InWT, InCR) as responses and (1, In140_AGE) as predictors (with in
 Check whether the response is monotone or not after permuting the rows and columns.
 
 ```{r}
-mon <- ismonotone(creatinine_data[c("InSC", "InWT", "InCR")])
+# get data
+x <- cbind(1, creatinine_data["In140_AGE"]) # include intercept features
+y <- creatinine_data[c("InSC", "InWT", "InCR")] # responses
+mon <- ismonotone(y, x)
 ```
 
-The response is not monotone:
+The response is not monotone.
 
 ```{r}
 mon$monotone
 ```
-Response data (after rearranging the rows and columns).
+
+Permute the rows and columns are not necessary.
+
+```{r}
+mon$permute
+```
+
+Get data.  If \code{mon$permute} is \code{FALSE}, there is no permutation of the rows and columns.
+If \code{mon$permute} is \code{TRUE}, there are rearrangements of the rows and columns of the original data.
+
+```{r}
+yobs <- mon$ynew
+xobs <- mon$xnew
+```
+
 
 When the missing structure is monotone. Use the rearranged data for later analysis, since the data is required to be in the standard monotone format. 
 
 When the missing structure is not monotone. It is suggested to use the rearranged data. The results are the same, and the permuted version displays the missing structure better.
 
 
-```{r}
-yobs <- mon$ynew
-```
-
 Shows the locations of the rows and columns in the original data.
 
 ```{r}
 mon$ynew_column
 ```
+
 ```{r}
 mon$ynew_row
 ```
@@ -148,9 +163,8 @@ mon$ynew_row
 Suppose we want the independence Jeffrey's prior with mixing distribution Gamma(2,2). 
 
 ```{r}
-iter = 5000
-X = cbind(1, creatinine_data["In140_AGE"])
-mcmc <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
+iter <- 5000
+mcmc <- dageneral(xobs, yobs, m=ncol(yobs), A=diag(0,ncol(yobs)), cw=cw_gamma, iter=iter) 
 ```
 
 The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
@@ -180,7 +194,7 @@ Constant. This corresponds to the normal error.
 
 ```{r}
 # constant
-mcmc_c <- dageneral(X, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
+mcmc_c <- dageneral(xobs, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
 ```
 
 ### (Functions to sample from the conditional weight distributions)
@@ -198,20 +212,20 @@ cw_gamma4 <- function(di, ri) {
 #cw_gamma0 <- function(di, ri, a=2, b=2) {
 #  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))
 #}
-mcmc_g4 <- dageneral(X, yobs, cw=cw_gamma4, iter=iter) 
+mcmc_g4 <- dageneral(xobs, yobs, cw=cw_gamma4, iter=iter) 
 ```
 
 
 Remove the influential observation patient 27.
 
 ```{r}
-X_r <- X[-27, ]
+xobs_r <- xobs[-27, ]
 yobs_r <- yobs[-27, ]
 ```
 
 ```{r}
 # constant
-mcmc_rc <- dageneral(X_r, yobs_r, cw=cw_constant, iter=iter)
+mcmc_rc <- dageneral(xobs_r, yobs_r, cw=cw_constant, iter=iter)
 ```
 
 Compare results for beta(2,1), i.e.,  the slope of InSC \~ In140\_age. 
@@ -230,11 +244,11 @@ Because of the influential observation patient 27, the "p" line which represents
 We show a monotone missing structure situation by removing the  InSC values of observations 29 and 30.
 
 ```{r}
-yobsm <- creatinine_data[c("InSC", "InWT", "InCR")]
-yobsm[29, 1] = NA
-yobsm[30, 1] = NA
+ym <- creatinine_data[c("InSC", "InWT", "InCR")]
+ym[29, 1] = NA
+ym[30, 1] = NA
 
-monm <- ismonotone(yobsm)
+monm <- ismonotone(ym, x)
 ```
 
 The data now is monotone. 
@@ -243,24 +257,39 @@ The data now is monotone.
 monm$monotone
 ```
 
+Permute the rows and columns are required.
+
+```{r}
+monm$permute
+```
+
+Get data. The \code{mon$permute} is \code{TRUE}, there are rearrangements of the rows and columns of the original data.
+
 ```{r}
 yobs1 <- monm$ynew
+xobs1 <- monm$xnew
 ```
+
+
+When the missing structure is monotone. Use the rearranged data for later analysis, since the data is required to be in the standard monotone format. 
+
 
 Shows the locations of the rows and columns in the original data.
 
 ```{r}
 monm$ynew_column
 ```
+
 ```{r}
 monm$ynew_row
 ```
+
 We should switch rows 29, 30 and 33, 34 to get the standard monotone format.
 
 The function calls the DA algorithm, which is the most efficient one in this situation. 
 
 ```{r}
-mcmcm <- dageneral(X, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
+mcmcm <- dageneral(xobs1, yobs1, m=ncol(yobs1),A=diag(0,ncol(yobs1)), cw=cw_gamma, iter=iter) 
 ```
 
 The algorithm generates a Markov chain with length `r iter`. And the computation time is `r mcmc$time`.
