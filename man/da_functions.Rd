@@ -9,10 +9,14 @@
 DA/DAI samplers for Bayesian robust multivariate linear regression with incomplete response.
 }
 \usage{
-da(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,iter=100,yfull=FALSE)
-daimf(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,iter=100,yfull=FALSE)
-daif(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,iter=100,yfull=FALSE)
-dai(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull=FALSE)
+da(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),
+cw=cw_gamma,iter=100,yfull=FALSE,...)
+daimf(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),
+cw=cw_gamma,iter=100,yfull=FALSE,...)
+daif(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),
+cw=cw_gamma,iter=100,yfull=FALSE,...)
+dai(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),
+cw=cw_gamma,Ik,iter=100,yfull=FALSE,...)
 }
 \arguments{
   \item{X}{ matrix. Feature matrix. If one wants to include intercept, remember to combine a column with all elements 1.}
@@ -22,8 +26,8 @@ dai(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull=FALSE
   \item{cw}{function. Function to sample from the conditional weight distribution. Default \code{cw_gamma}. }
   \item{Ik}{matrix and all elements should be logical values. Missing structure matrix. Indicate the imputed data in the I step. Default fully observed.}
   \item{iter}{ positive integer. The length of the  Markov chain. Default \code{100}. }
-  \item{yfull}{ logical. \code{TRUE}: impute all missing components in the response and output them. \code{FALSE}: do not output or calculate (if non-necessary) the missing components in the response. Default \code{FALSE}.
-}
+  \item{yfull}{ logical. \code{TRUE}: impute all missing components in the response and output them. \code{FALSE}: do not output or calculate (if non-necessary) the missing components in the response. Default \code{FALSE}.}
+  \item{...}{parameters in the mixing distribution.}
 }
 \value{
 Returns a list with two elements.

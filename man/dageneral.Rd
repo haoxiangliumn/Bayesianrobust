@@ -5,7 +5,8 @@
 Data augmentation algorithms for Bayesian robust multivariate linear regression with incomplete response.
 }
 \usage{
-dageneral(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull=FALSE)
+dageneral(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),
+cw=cw_gamma,Ik,iter=100,yfull=FALSE,...)
 }
 \arguments{
   \item{X}{ matrix. Feature matrix. If one wants to include intercept, remember to combine a column with all elements 1.}
@@ -17,6 +18,7 @@ dageneral(X,yobs,m=ncol(yobs),A=diag(0,ncol(yobs)),cw=cw_gamma,Ik,iter=100,yfull
   \item{iter}{ positive integer. The length of the  Markov chain. Default \code{100}. }
   \item{yfull}{ logical. \code{TRUE}: impute all missing components in the response and output them. \code{FALSE}: do not output or calculate (if non-necessary) the missing components in the response. Default \code{FALSE}.
 }
+  \item{...}{parameters in the mixing distribution.}
 }
 \value{
 Returns a list with two elements.
@@ -32,7 +34,7 @@ Data augmentation algorithms to sample from the posterior in Bayesian robust mul
 
 For the full model and algorithm details, see \url{http://arxiv.org/abs/2212.01712}. 
 
-The \code{cw} function generates samples from the conditional weight distribution, see \code{\link{cw}} page for the choices of distributions provided and how to define such functions manually. 
+Given a mixing distribution, the \code{cw} function generates samples from the conditional weight distribution. See \code{\link{cw}} page for the choices of distributions provided. The parameters in the mixing distribution can be defined through the \code{...} arguments. 
 
 %{monotone:} 
 %Assume that \code{yobs} have \code{n} observations and each has \code{d} components. \code{yobs} is monotone if for the \code{i}th observation, \code{i = 1,...,n}, with \code{j_i} the first observed component, the \code{(j_i+1)}th to \code{d}th elements are all observed, and \code{j_i} is no smaller than \code{j_{i+1}}. Note that in practice, there are cases where the observed missing structure can be rearranged to become monotone by permuting the rows and columns of the response matrix.

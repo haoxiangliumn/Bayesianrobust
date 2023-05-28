@@ -1,7 +1,7 @@
 # DAI (monotone to full) each iteration (impute a monotone pattern to fully observed) (I step (I1 and I2 if contain missing values) and P step).
 
 # 
-iter_daimf <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FALSE){
+iter_daimf <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FALSE, ...){
   # DAI (monotone to full) each iteration (impute a monotone pattern to fully observed) (I step (I1 and I2 if contain missing values) and P step).
   # Args:
   #   beta: Vector. Previous linear regression parameters \tilde{\beta}_j, j\in\{1,...,d\}.
@@ -17,7 +17,7 @@ iter_daimf <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FAL
   #   n: Positive integer. Number of observations.
   #   p: Positive integer. Number of features.
   #   yfull: Logical, default FALSE. TRUE: impute all missing components in the response and output them. FALSE: no output (missing componnents in the response).
-  # 
+  #   ... Parameters in the mixing distribution. 
   # Returns:
   #   List. Matrix sigma = sigma(t+1); Matrix beta = beta(t+1)
   #   beta: linear regression parameters
@@ -40,7 +40,7 @@ iter_daimf <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FAL
     d_i <- sum(obs)
     ri <- t(t(yobs[i, obs, drop=FALSE]) - t(beta[, obs, drop=FALSE]) %*% t(X[i, , drop=FALSE])) %*% 
           mat_inv(sigma[obs, obs, drop=FALSE]) %*% (t(yobs[i, obs, drop=FALSE]) - t(beta[, obs, drop=FALSE]) %*% t(X[i, , drop=FALSE]))
-    w[i] <- cw(d_i, ri)
+    w[i] <- cw(d_i, ri, ...)
     ## impute missing value
     nobs <- length(obs[obs == TRUE])
     if (nobs == d){

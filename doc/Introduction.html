@@ -536,7 +536,7 @@ distribution Gamma(2,2).</p>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>mcmc <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs, yobs, <span class="at">m=</span><span class="fu">ncol</span>(yobs), <span class="at">A=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(yobs)), <span class="at">cw=</span>cw_gamma, <span class="at">iter=</span>iter) </span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;daif&quot;</span></span></code></pre></div>
 <p>The algorithm generates a Markov chain with length 5000. And the
-computation time is 1.74.</p>
+computation time is 49.07.</p>
 </div>
 <div id="assess-the-mcmc-samples" class="section level3">
 <h3>Assess the MCMC samples</h3>
@@ -556,21 +556,19 @@ elements in each row are imputed missing components of .</p>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>mcmc_c <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs, yobs, <span class="at">m=</span><span class="fu">ncol</span>(yobs),<span class="at">A=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(yobs)), <span class="at">cw=</span>cw_constant, <span class="at">iter=</span>iter)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;daif&quot;</span></span></code></pre></div>
 </div>
-<div id="functions-to-sample-from-the-conditional-weight-distributions" class="section level3">
-<h3>(Functions to sample from the conditional weight distributions)</h3>
-<p>Function draws samples from the conditional mixing distribution,
-where <span class="math display">\[ P(w) \propto
-w^{{di}/2}\exp(-{ri}w/2)P_{mix}(dw).\]</span></p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># gamma(a=4, b=4)</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cw_gamma4 <span class="ot">&lt;-</span> <span class="cf">function</span>(di, ri) {</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">cw_gamma0</span>(<span class="at">d=</span>di, <span class="at">ri=</span>ri, <span class="at">a=</span><span class="dv">4</span>, <span class="at">b=</span><span class="dv">4</span>))</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># where</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#cw_gamma0 &lt;- function(di, ri, a=2, b=2) {</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">#}</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>mcmc_g4 <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs, yobs, <span class="at">cw=</span>cw_gamma4, <span class="at">iter=</span>iter) </span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;daif&quot;</span></span></code></pre></div>
+<div id="mixing-distributions" class="section level3">
+<h3>Mixing distributions</h3>
+<p>Given a mixing distribution <span class="math inline">\(P_{mix}(dw)\)</span>, function draws samples from
+the conditional mixing distribution, where <span class="math display">\[
+P(w) \propto w^{{di}/2}\exp(-{ri}w/2)P_{mix}(dw),\]</span> and arguments
+are parameters in the mixing distribution.</p>
+<p>When the mixing distribution is gamma(a=2, b=2), draws samples from
+the corresponding conditional weight distribution. Function by default
+assumes mixing distribution gamma(a=2, b=2). The mixing distribution
+parameters are passed using the arguments. For example,</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># mixing distribution gamma(a=4, b=4)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>mcmc_g4 <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs, yobs, <span class="at">cw=</span>cw_gamma, <span class="at">iter=</span>iter, <span class="at">a=</span><span class="dv">4</span>, <span class="at">b=</span><span class="dv">4</span>) </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;daif&quot;</span></span></code></pre></div>
 <p>Remove the influential observation patient 27.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>xobs_r <span class="ot">&lt;-</span> xobs[<span class="sc">-</span><span class="dv">27</span>, ]</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>yobs_r <span class="ot">&lt;-</span> yobs[<span class="sc">-</span><span class="dv">27</span>, ]</span></code></pre></div>
@@ -628,7 +626,7 @@ in this situation.</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>mcmcm <span class="ot">&lt;-</span> <span class="fu">dageneral</span>(xobs1, yobs1, <span class="at">m=</span><span class="fu">ncol</span>(yobs1),<span class="at">A=</span><span class="fu">diag</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(yobs1)), <span class="at">cw=</span>cw_gamma, <span class="at">iter=</span>iter) </span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;da&quot;</span></span></code></pre></div>
 <p>The algorithm generates a Markov chain with length 5000. And the
-computation time is 1.74.</p>
+computation time is 49.07.</p>
 </div>
 <div id="data-augmentation-algorithms-comparison" class="section level2">
 <h2>Data Augmentation Algorithms Comparison</h2>

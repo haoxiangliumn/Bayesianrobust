@@ -4,7 +4,7 @@ export(da)
 export(daif)
 export(dai)
 export(ismonotone)
-export(cw_gig, cw_gamma, cw_constant, cw_mass, cw_gig0, cw_gamma0, cw_mass0)
+export(cw_gig, cw_gamma, cw_constant, cw_mass)
 
 importFrom("stats", "rchisq", "rgamma", "rnorm", "runif")
 importFrom("matlib", "inv")

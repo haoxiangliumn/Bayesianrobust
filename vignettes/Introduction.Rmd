@@ -197,22 +197,17 @@ Constant. This corresponds to the normal error.
 mcmc_c <- dageneral(xobs, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
 ```
 
-### (Functions to sample from the conditional weight distributions)
+### Mixing distributions
 
-Function 
+Given a mixing distribution $P_{mix}(dw)$, function 
 \code{cw(di,ri,...)} draws samples from the conditional mixing distribution, where
-$$ P(w) \propto w^{{di}/2}\exp(-{ri}w/2)P_{mix}(dw).$$
+$$ P(w) \propto w^{{di}/2}\exp(-{ri}w/2)P_{mix}(dw),$$
+and \code{...} arguments are parameters in the mixing distribution.
 
+When the mixing distribution is gamma(a=2, b=2), \code{cw_gamma} draws samples from the corresponding conditional weight distribution. Function \code{cw_gamma} by default assumes mixing distribution gamma(a=2, b=2). The mixing distribution parameters are passed using the \code{...} arguments. For example,
 ```{r}
-# gamma(a=4, b=4)
-cw_gamma4 <- function(di, ri) {
-  return(cw_gamma0(d=di, ri=ri, a=4, b=4))
-}
-# where
-#cw_gamma0 <- function(di, ri, a=2, b=2) {
-#  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))
-#}
-mcmc_g4 <- dageneral(xobs, yobs, cw=cw_gamma4, iter=iter) 
+# mixing distribution gamma(a=4, b=4)
+mcmc_g4 <- dageneral(xobs, yobs, cw=cw_gamma, iter=iter, a=4, b=4) 
 ```
 
 

@@ -1,6 +1,6 @@
 # DA (monotone) each iteration. 
 
-iter_da <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FALSE){
+iter_da <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FALSE, ...){
   # DA each iteration. (yobs monotone)
   # Args:
   #   beta: Vector. Previous linear regression parameters \tilde{\beta}_j, j\in\{1,...,d\}.
@@ -16,7 +16,7 @@ iter_da <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FALSE)
   #   n: number of observations
   #   p: number of features
   #   yfull: Logical, default FALSE. TRUE: impute all missing components in the response and output them. FALSE: no output (missing componnents in the response).
-  # 
+  #   ... Parameters in the mixing distribution. 
   # Returns:
   #   List. Matrix sigma = sigma(t+1); Matrix beta = beta(t+1)
   #   beta: linear regression parameters
@@ -41,7 +41,7 @@ iter_da <- function(beta, sigma, yobs, X, cw, A, m, I, ni, d, n, p, yfull=FALSE)
     d_i <- sum(obs)
     ri <- t(t(yobs[i, obs, drop=FALSE]) - t(beta[, obs, drop=FALSE]) %*% t(X[i, , drop=FALSE])) %*% 
           mat_inv(sigma[obs, obs, drop=FALSE]) %*% (t(yobs[i, obs, drop=FALSE]) - t(beta[, obs, drop=FALSE]) %*% t(X[i, , drop=FALSE]))
-    w[i] <- cw(d_i, ri)
+    w[i] <- cw(d_i, ri, ...)
   }
   
   # p step

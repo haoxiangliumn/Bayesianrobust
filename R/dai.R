@@ -1,6 +1,6 @@
 # Gibbs sampler implementing DAI algorithms (any missing structure to fully observed/monotone)
 # DAI (DAI) (impute y_{(I)} to y_{(Ik)} if y has missing values)
-dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=matrix(TRUE, nrow=nrow(yobs), ncol=ncol(yobs)), iter=100, yfull=FALSE)
+dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=matrix(TRUE, nrow=nrow(yobs), ncol=ncol(yobs)), iter=100, yfull=FALSE, ...)
 {
   # DAI (impute y_{(I)} to y_{(Ik)}) (any missing structure to fully observed/monotone)
   # Args:
@@ -12,7 +12,7 @@ dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=ma
   #   Ik: Imputation matrix structure (\bm{k}'). Ik_{ij} = TRUE: y_{ij} has value; Ik_{ij} = FALSE: y_{ij} no value.
   #   iter: Positive integer. Number of iterations.
   #   yfull: Logical, default FALSE. TRUE: impute all missing components in the response and output them. FALSE: no output (missing componnents in the response).
-  #
+  #   ... Parameters in the mixing distribution. 
   # Returns:
   #   List. First iter+1 elements: Matrix sigma and Matrix beta t=0 to t=iter; iter+2 element: time to implement the algorithm.
   #         beta: linear regression parameters
@@ -56,7 +56,7 @@ dai <- function(X, yobs, m=ncol(yobs), A=diag(0, ncol(yobs)), cw=cw_gamma, Ik=ma
   
   start.time <- Sys.time()
   for (i in 1:iter) {
-    new <- iter_dai(beta=beta, sigma=sigma, yobs=yobs, X=X, cw=cw, A=A, m=m, I=I, Ik=Ik, ni=ni, d=d, n=n, p=p, yfull=yfull)
+    new <- iter_dai(beta=beta, sigma=sigma, yobs=yobs, X=X, cw=cw, A=A, m=m, I=I, Ik=Ik, ni=ni, d=d, n=n, p=p, yfull=yfull, ...)
     beta <- new$beta
     sigma <- new$sigma
     if(!yfull) samples[i + 1, ] <- c(as.vector(beta), as.vector(sigma))

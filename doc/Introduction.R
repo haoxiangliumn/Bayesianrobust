@@ -57,15 +57,8 @@ ggplot(sim, aes(x=beta, color=Model)) + geom_density() + xlab("Beta") + ylab("De
 mcmc_c <- dageneral(xobs, yobs, m=ncol(yobs),A=diag(0,ncol(yobs)), cw=cw_constant, iter=iter)
 
 ## -----------------------------------------------------------------------------
-# gamma(a=4, b=4)
-cw_gamma4 <- function(di, ri) {
-  return(cw_gamma0(d=di, ri=ri, a=4, b=4))
-}
-# where
-#cw_gamma0 <- function(di, ri, a=2, b=2) {
-#  return(rgamma(n=1, shape=di / 2 + a, rate=ri / 2 + b))
-#}
-mcmc_g4 <- dageneral(xobs, yobs, cw=cw_gamma4, iter=iter) 
+# mixing distribution gamma(a=4, b=4)
+mcmc_g4 <- dageneral(xobs, yobs, cw=cw_gamma, iter=iter, a=4, b=4) 
 
 ## -----------------------------------------------------------------------------
 xobs_r <- xobs[-27, ]

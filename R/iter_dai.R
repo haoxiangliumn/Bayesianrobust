@@ -1,6 +1,6 @@
 # MDAI (impute y_{(I)} to y_{(Ik)}) each iteration. (Ik has to be monotone)
 
-iter_dai <- function(beta, sigma, yobs, X, cw, A, m, I, Ik, ni, d, n, p, yfull=FALSE){
+iter_dai <- function(beta, sigma, yobs, X, cw, A, m, I, Ik, ni, d, n, p, yfull=FALSE, ...){
   # DAI each iteration. (yobs impute to Ik monotone pattern)
   # Args:
   #   beta: Vector. Previous linear regression parameters \tilde{\beta}_j, j\in\{1,...,d\}.
@@ -17,7 +17,7 @@ iter_dai <- function(beta, sigma, yobs, X, cw, A, m, I, Ik, ni, d, n, p, yfull=F
   #   n: number of observations
   #   p: number of features
   #   yfull: Logical, default FALSE. TRUE: impute all missing components in the response and output them. FALSE: no output (missing componnents in the response).
-  #
+  #   ... Parameters in the mixing distribution. 
   # Returns:
   #   List. Matrix sigma = sigma(t+1); Matrix beta = beta(t+1)
   #   beta: linear regression parameters
@@ -46,7 +46,7 @@ iter_dai <- function(beta, sigma, yobs, X, cw, A, m, I, Ik, ni, d, n, p, yfull=F
     d_i <- sum(obs)
     ri <- t(t(yobs[i, obs, drop=FALSE]) - t(beta[, obs, drop=FALSE]) %*% t(X[i, , drop=FALSE])) %*%
       mat_inv(sigma[obs, obs, drop=FALSE]) %*% (t(yobs[i, obs, drop=FALSE]) - t(beta[, obs, drop=FALSE]) %*% t(X[i, , drop=FALSE]))
-    w[i] <- cw(d_i, ri)
+    w[i] <- cw(d_i, ri, ...)
     ## impute missing value
     imp <- Ik_k0[i, ] # y components that need impute
     if (sum(imp) == 0){
